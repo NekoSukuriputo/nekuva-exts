@@ -13,7 +13,9 @@ import org.dokiteam.doki.parsers.util.suspendlazy.getOrNull
 import org.dokiteam.doki.parsers.util.suspendlazy.suspendLazy
 import java.text.SimpleDateFormat
 import java.util.*
+import org.dokiteam.doki.parsers.Broken
 
+@Broken("Need to fix getPages")
 @MangaSourceParser("DAMCONUONG", "Dâm Cô Nương", "vi", type = ContentType.HENTAI)
 internal class DamCoNuong(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.DAMCONUONG, 30) {
