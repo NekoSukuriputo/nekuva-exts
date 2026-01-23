@@ -2,6 +2,7 @@ package org.dokiteam.doki.parsers.site.mangabox.en
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import org.dokiteam.doki.parsers.Broken
 import org.dokiteam.doki.parsers.MangaLoaderContext
 import org.dokiteam.doki.parsers.MangaSourceParser
 import org.dokiteam.doki.parsers.config.ConfigKey
@@ -16,6 +17,7 @@ import org.dokiteam.doki.parsers.site.mangabox.MangaboxParser
 import org.dokiteam.doki.parsers.util.*
 import java.util.*
 
+@Broken("Original site closed")
 @MangaSourceParser("MANGAIRO", "MangaIro", "en")
 internal class Mangairo(context: MangaLoaderContext) :
 	MangaboxParser(context, MangaParserSource.MANGAIRO) {

@@ -11,7 +11,7 @@ import java.text.SimpleDateFormat
 @MangaSourceParser("DAYCOMICS", "DayComics", "en")
 internal class DayComics(context: MangaLoaderContext) :
 	HotComicsParser(context, MangaParserSource.DAYCOMICS, "daycomics.me/en") {
-	
+
 	override suspend fun getDetails(manga: Manga): Manga {
 		val mangaUrl = manga.url.toAbsoluteUrl(domain)
 		val redirectHeaders = Headers.Builder().set("Referer", mangaUrl).build()

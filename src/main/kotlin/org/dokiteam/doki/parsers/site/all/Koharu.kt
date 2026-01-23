@@ -24,14 +24,7 @@ import java.util.*
 internal class Koharu(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.KOHARU, 24) {
 
-	override val configKeyDomain = ConfigKey.Domain(
-        "niyaniya.moe",
-        "anchira.to",
-        "gehenna.jp",
-        "shupogaki.moe",
-        "hdoujin.net",
-    )
-
+	override val configKeyDomain = ConfigKey.Domain("niyaniya.moe")
 	private val apiSuffix = "api.schale.network"
 
 	override val userAgentKey = ConfigKey.UserAgent(

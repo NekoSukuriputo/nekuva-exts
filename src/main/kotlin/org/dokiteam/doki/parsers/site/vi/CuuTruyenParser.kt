@@ -15,11 +15,14 @@ import org.dokiteam.doki.parsers.bitmap.Rect
 import org.dokiteam.doki.parsers.config.ConfigKey
 import org.dokiteam.doki.parsers.core.PagedMangaParser
 import org.dokiteam.doki.parsers.model.*
+import org.dokiteam.doki.parsers.network.OkHttpWebClient
 import org.dokiteam.doki.parsers.network.UserAgents
+import org.dokiteam.doki.parsers.network.WebClient
 import org.dokiteam.doki.parsers.util.*
 import org.dokiteam.doki.parsers.util.json.*
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.time.Duration.Companion.seconds
 
 @MangaSourceParser("CUUTRUYEN", "Cứu Truyện", "vi")
 internal class CuuTruyenParser(context: MangaLoaderContext) :
@@ -28,12 +31,18 @@ internal class CuuTruyenParser(context: MangaLoaderContext) :
     private val apiSuffix = "/api/v2"
 	override val userAgentKey = ConfigKey.UserAgent(UserAgents.KOTATSU)
 
+	override val webClient: WebClient by lazy {
+		val newHttpClient = context.httpClient.newBuilder()
+			.rateLimit(15, 60.seconds)
+			.build()
+
+		OkHttpWebClient(newHttpClient, source)
+	}
+
 	override val configKeyDomain = ConfigKey.Domain(
 		"cuutruyen.net",
 		"nettrom.com",
 		"hetcuutruyen.net",
-		"nettrom.com",
-		"cuutruyen5c844.site",
 	)
 
     private val preferredServerKey = ConfigKey.PreferredImageServer(
@@ -137,7 +146,11 @@ internal class CuuTruyenParser(context: MangaLoaderContext) :
             append(pageSize)
         }
 
-        val json = webClient.httpGet("https://$domain$apiSuffix$url").parseJson()
+        // prevent throw e in app
+        val json = runCatching {
+            webClient.httpGet("https://$domain$apiSuffix$url").parseJson()
+        }.getOrNull() ?: return emptyList()
+
         val data = json.optJSONArray("data")
             ?: json.getJSONObject("data").getJSONArray("new_chapter_mangas")
             ?: json.getJSONObject("data").getJSONArray("mangas")

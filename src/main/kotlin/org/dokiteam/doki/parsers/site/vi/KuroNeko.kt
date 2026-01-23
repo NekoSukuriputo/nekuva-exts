@@ -8,16 +8,27 @@ import org.dokiteam.doki.parsers.MangaSourceParser
 import org.dokiteam.doki.parsers.config.ConfigKey
 import org.dokiteam.doki.parsers.core.PagedMangaParser
 import org.dokiteam.doki.parsers.model.*
+import org.dokiteam.doki.parsers.network.OkHttpWebClient
+import org.dokiteam.doki.parsers.network.WebClient
 import org.dokiteam.doki.parsers.util.*
 import java.util.*
+import kotlin.time.Duration.Companion.seconds
 
 @MangaSourceParser("KURONEKO", "Kuro Neko / vi-Hentai", "vi", type = ContentType.HENTAI)
 internal class KuroNeko(context: MangaLoaderContext) : PagedMangaParser(context, MangaParserSource.KURONEKO, 30) {
 
-	override val configKeyDomain = ConfigKey.Domain("vi-hentai.moe", "vi-hentai.org")
+	override val configKeyDomain = ConfigKey.Domain("vi-hentai.moe", "vi-hentai.pro")
 
 	private val pagesRequestMutex = Mutex()
 	private var lastPagesRequestTime = 0L
+
+	override val webClient: WebClient by lazy {
+		val newHttpClient = context.httpClient.newBuilder()
+			.rateLimit(15, 60.seconds)
+			.build()
+
+		OkHttpWebClient(newHttpClient, source)
+	}
 
 	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
 		super.onCreateConfig(keys)

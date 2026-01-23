@@ -13,17 +13,19 @@ import okio.IOException
 import org.json.JSONArray
 import org.json.JSONObject
 import org.dokiteam.doki.parsers.MangaLoaderContext
-import org.dokiteam.doki.parsers.MangaSourceParser
 import org.dokiteam.doki.parsers.bitmap.Bitmap
 import org.dokiteam.doki.parsers.bitmap.Rect
 import org.dokiteam.doki.parsers.config.ConfigKey
 import org.dokiteam.doki.parsers.core.PagedMangaParser
 import org.dokiteam.doki.parsers.network.UserAgents
 import org.dokiteam.doki.parsers.model.*
+import org.dokiteam.doki.parsers.network.OkHttpWebClient
+import org.dokiteam.doki.parsers.network.WebClient
 import org.dokiteam.doki.parsers.util.*
 import org.dokiteam.doki.parsers.util.json.*
 import org.dokiteam.doki.parsers.util.suspendlazy.suspendLazy
 import java.util.*
+import kotlin.time.Duration.Companion.seconds
 
 internal abstract class YuriGardenParser(
 	context: MangaLoaderContext,
@@ -35,10 +37,20 @@ internal abstract class YuriGardenParser(
 	private val availableTags = suspendLazy(initializer = ::fetchTags)
 
 	override val configKeyDomain = ConfigKey.Domain(domain)
-	private val apiSuffix = "api.$domain"
+	private val apiSuffix = "api.$domain/api"
 	private val cdnSuffix = "db.$domain/storage/v1/object/public/yuri-garden-store"
 
+	override val webClient: WebClient by lazy {
+		val newHttpClient = context.httpClient.newBuilder()
+			.rateLimit(20, 60.seconds)
+			.build()
+
+		OkHttpWebClient(newHttpClient, source)
+	}
+
 	override fun getRequestHeaders(): Headers = Headers.Builder()
+		.add("Referer", "https://$domain/")
+		.add("Origin", "https://$domain")
 		.add("x-app-origin", "https://$domain")
 		.add("User-Agent", UserAgents.KOTATSU)
 		.build()
@@ -211,8 +223,8 @@ internal abstract class YuriGardenParser(
 				MangaChapter(
 					id = generateUid(chapId),
 					title = jo.getString("name"),
-					number = jo.optDouble("order", 0.0).toFloat(),
-                    volume = jo.optInt("volume", 0),
+					number = jo.getFloatOrDefault("order", 0f),
+					volume = jo.optInt("volume", 0),
 					url = "$chapId",
 					scanlator = team,
 					uploadDate = jo.getLong("lastUpdated"),
@@ -228,7 +240,7 @@ internal abstract class YuriGardenParser(
 		val pages = json.getJSONArray("pages").asTypedList<JSONObject>()
 
 		return pages.mapIndexed { index, page ->
-			val rawUrl = page.getString("url")
+			val rawUrl = page.getString("url").replace("_credit", "")
 
 			if (rawUrl.startsWith("comics")) {
 				val key = page.optString("key", null)
@@ -294,7 +306,9 @@ internal abstract class YuriGardenParser(
 	}
 
 	private suspend fun fetchTags(): Set<MangaTag> {
-		val json = webClient.httpGet("https://$apiSuffix/resources/systems_vi.json").parseJson()
+		val url = urlBuilder().host("api.$domain")
+			.addPathSegment("resources").addPathSegment("systems_vi.json")
+		val json = webClient.httpGet(url.build()).parseJson()
 		val genres = json.getJSONObject("genres")
 		return genres.keys().asSequence().mapTo(arraySetOf()) { key ->
 			val genre = genres.getJSONObject(key)
@@ -306,11 +320,3 @@ internal abstract class YuriGardenParser(
 		}
 	}
 }
-
-@MangaSourceParser("YURIGARDEN", "Yuri Garden", "vi")
-internal class YuriGarden(context: MangaLoaderContext) :
-    YuriGardenParser(context, MangaParserSource.YURIGARDEN, "yurigarden.com", false)
-
-@MangaSourceParser("YURIGARDEN_R18", "Yuri Garden (18+)", "vi", type = ContentType.HENTAI)
-internal class YuriGardenR18(context: MangaLoaderContext) :
-    YuriGardenParser(context, MangaParserSource.YURIGARDEN_R18, "yurigarden.com", true)

@@ -201,4 +201,4 @@ internal class TruyenGG(context: MangaLoaderContext) : PagedMangaParser(context,
 			)
 		}
 	}
-} 
+}

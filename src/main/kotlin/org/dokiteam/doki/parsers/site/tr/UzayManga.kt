@@ -169,12 +169,12 @@ internal class UzayManga(context: MangaLoaderContext) :
     override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
         val fullUrl = chapter.url.toAbsoluteUrl(domain)
         val doc = webClient.httpGet(fullUrl).parseHtml()
-        
+
         // Yeni regex: JSON içindeki "path" değerlerini yakala
         val pageRegex = Regex("""\\"path\\":\\"([^\\"]+)\\"""")
-        val script = doc.select("script").find { it.html().contains(pageRegex) }?.html() 
+        val script = doc.select("script").find { it.html().contains(pageRegex) }?.html()
             ?: return emptyList()
-        
+
         return pageRegex.findAll(script).mapNotNull { result ->
             result.groups[1]?.value?.let { path ->
                 // Yeni CDN yapısına göre URL oluştur

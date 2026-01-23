@@ -12,6 +12,7 @@ import org.dokiteam.doki.parsers.util.selectFirstOrThrow
 import org.dokiteam.doki.parsers.util.urlEncoded
 import org.dokiteam.doki.parsers.util.parseSafe
 import java.text.SimpleDateFormat
+import java.util.EnumSet
 import java.util.Locale
 
 @MangaSourceParser("VIOLETSCANS", "VioletScans", "en")
@@ -30,7 +31,7 @@ internal class VioletScans(context: MangaLoaderContext) :
 		keys.add(userAgentKey)
 	}
 
-	override val availableSortOrders: Set<SortOrder> = setOf(SortOrder.NEWEST)
+	override val availableSortOrders: Set<SortOrder> = EnumSet.of(SortOrder.NEWEST)
 
 	override suspend fun getFilterOptions(): MangaListFilterOptions = MangaListFilterOptions()
 

@@ -1,42 +1,33 @@
 package org.dokiteam.doki.parsers.site.gallery.all
 
 import okhttp3.Interceptor
-import okhttp3.Request
 import okhttp3.Response
-import kotlinx.coroutines.*
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import org.dokiteam.doki.parsers.*
-import org.dokiteam.doki.parsers.model.*
+import org.dokiteam.doki.parsers.MangaLoaderContext
+import org.dokiteam.doki.parsers.MangaSourceParser
+import org.dokiteam.doki.parsers.model.ContentType
+import org.dokiteam.doki.parsers.model.MangaParserSource
 import org.dokiteam.doki.parsers.site.gallery.GalleryParser
 
 @MangaSourceParser("KIUTAKU", "Kiutaku", type = ContentType.OTHER)
 internal class Kiutaku(context: MangaLoaderContext) :
-    GalleryParser(context, MangaParserSource.KIUTAKU, "kiutaku.com") {
+	GalleryParser(context, MangaParserSource.KIUTAKU, "kiutaku.com") {
 
-    companion object {
-        private val mutex = Mutex()
-        private var lastImageRequestTime = 0L
-        private val IMAGE_EXTENSIONS = listOf(".jpg", ".jpeg", ".png", ".webp")
-    }
+	override fun intercept(chain: Interceptor.Chain): Response {
+		val request = chain.request()
+		val url = request.url.toString()
 
-    override fun intercept(chain: Interceptor.Chain): Response {
-        val request = chain.request()
-        val url = request.url.toString()
+		val headers = if (url.contains("wp-content")) {
+			request.headers.newBuilder()
+				.removeAll("Referer")
+				.build()
+		} else {
+			request.headers
+		}
 
-        if (IMAGE_EXTENSIONS.any { url.endsWith(it, ignoreCase = true) }) {
-            runBlocking {
-                mutex.withLock {
-                    val now = System.currentTimeMillis()
-                    val wait = 500L - (now - lastImageRequestTime)
-                    if (wait > 0) {
-                        delay(wait)
-                    }
-                    lastImageRequestTime = System.currentTimeMillis()
-                }
-            }
-        }
+		val newRequest = request.newBuilder()
+			.headers(headers)
+			.build()
 
-        return chain.proceed(request)
-    }
+		return chain.proceed(newRequest)
+	}
 }

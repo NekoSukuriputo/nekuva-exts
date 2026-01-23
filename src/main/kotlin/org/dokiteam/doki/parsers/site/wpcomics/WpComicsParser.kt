@@ -340,11 +340,21 @@ internal abstract class WpComicsParser(
 		}
 	}
 
-	protected fun Element.findImageUrl(): String? {
-		val attrs = attributes().filter { attr ->
-			attr.value.toHttpUrlOrNull() != null
-		}
-		// src attribute should have a lowest priority
-		return attrs.maxByOrNull { it.key != "src" }?.value
-	}
+    protected fun Element.findImageUrl(): String? {
+        val priorityKeys = listOf("src", "data-src", "data-original", "data-original-src")
+
+        for (key in priorityKeys) {
+            val value = attr(key).trim()
+            if (value.isNotBlank() && value.toHttpUrlOrNull() != null) {
+                return value
+            }
+        }
+
+        val fallback = attributes().firstOrNull { attr ->
+            val value = attr.value.trim()
+            value.toHttpUrlOrNull() != null
+        }
+
+        return fallback?.value
+    }
 }

@@ -83,7 +83,7 @@ internal class DemonicScans(context: MangaLoaderContext) :
         val doc = webClient.httpGet(url).parseHtml()
         val selector = when {
             hasQuery -> "body > a[href]"
-            isNewest -> "div#updates-container > div.updates-element" 
+            isNewest -> "div#updates-container > div.updates-element"
             else -> "div#advanced-content > div.advanced-element"
         }
 

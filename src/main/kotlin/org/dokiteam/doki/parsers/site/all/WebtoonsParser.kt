@@ -59,18 +59,13 @@ internal abstract class WebtoonsParser(
 		}
 
 	private suspend fun fetchEpisodes(titleNo: Long): List<MangaChapter> {
-        val url = "https://$mobileApiDomain/api/v1/webtoon/$titleNo/episodes?pageSize=99999"
-        val testJson = webClient.httpGet(url).parseJson()
-        val json = if (testJson.getBoolean("success")) { testJson } else {
-            val fallbackUrl = url.replace("/webtoon/", "/canvas/")
-            webClient.httpGet(fallbackUrl).parseJson()
-        }
+		val url = "https://$mobileApiDomain/api/v1/webtoon/$titleNo/episodes?pageSize=99999"
+		val json = webClient.httpGet(url).parseJson()
 
-        val episodeList = json.optJSONObject("result")
-            ?.optJSONArray("episodeList")
-            ?: throw ParseException("No episodes found for title $titleNo", url)
+		val episodeList = json.optJSONObject("result")?.optJSONArray("episodeList")
+			?: throw ParseException("No episodes found for title $titleNo", url)
 
-        return episodeList.mapChapters { _, jo ->
+		return episodeList.mapChapters { _, jo ->
 			val episodeTitle = jo.getStringOrNull("episodeTitle") ?: ""
 			val episodeNo = jo.getInt("episodeNo")
 			val viewerLink = jo.getString("viewerLink")

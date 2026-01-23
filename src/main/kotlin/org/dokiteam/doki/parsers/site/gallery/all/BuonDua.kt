@@ -1,10 +1,10 @@
-package org.dokiteam.doki.parsers.site.gallery.vi
+package org.dokiteam.doki.parsers.site.gallery.all
 
 import org.dokiteam.doki.parsers.MangaLoaderContext
 import org.dokiteam.doki.parsers.MangaSourceParser
-import org.dokiteam.doki.parsers.model.MangaParserSource
 import org.dokiteam.doki.parsers.config.ConfigKey
 import org.dokiteam.doki.parsers.model.ContentType
+import org.dokiteam.doki.parsers.model.MangaParserSource
 import org.dokiteam.doki.parsers.site.gallery.GalleryParser
 
 @MangaSourceParser("BUONDUA", "Buon Dua", "vi", type = ContentType.OTHER)

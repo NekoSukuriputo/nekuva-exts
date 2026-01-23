@@ -7,6 +7,6 @@ import org.dokiteam.doki.parsers.site.madara.MadaraParser
 
 @MangaSourceParser("RUAHAPCHANHDAY", "Rùa Hấp Chanh Dây", "vi")
 internal class RuaHapChanhDay(context: MangaLoaderContext) :
-	MadaraParser(context, MangaParserSource.RUAHAPCHANHDAY, "ruahapchanhday.com", 30) {
+	MadaraParser(context, MangaParserSource.RUAHAPCHANHDAY, "ruahapchanhday1.com", 30) {
 	override val datePattern = "dd/MM/yyyy"
 }

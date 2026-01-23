@@ -8,12 +8,6 @@ import org.dokiteam.doki.parsers.site.natsu.NatsuParser
 
 @MangaSourceParser("KIRYUU", "Kiryuu", "id")
 internal class Kiryuu(context: MangaLoaderContext) :
-	NatsuParser(context, MangaParserSource.KIRYUU, pageSize = 24) {
-
-	override val configKeyDomain = ConfigKey.Domain("kiryuu03.com")
-
-	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
-		super.onCreateConfig(keys)
-		keys.add(userAgentKey)
-	}
+    NatsuParser(context, MangaParserSource.KIRYUU, pageSize = 24) {
+    override val configKeyDomain = ConfigKey.Domain("kiryuu03.com")
 }

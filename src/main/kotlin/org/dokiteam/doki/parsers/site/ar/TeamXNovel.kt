@@ -215,7 +215,7 @@ internal class TeamXNovel(context: MangaLoaderContext) :
 				img.hasAttr("src") -> img.requireSrc().toRelativeUrl(domain)
 				else -> img.attrAsRelativeUrl("data-src")
 			}
-			
+
 			MangaPage(
 				id = generateUid(url),
 				url = url,

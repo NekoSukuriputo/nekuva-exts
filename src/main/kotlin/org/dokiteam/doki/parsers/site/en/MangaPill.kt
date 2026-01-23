@@ -121,7 +121,7 @@ internal class MangaPill(context: MangaLoaderContext) : PagedMangaParser(context
 			?.nextElementSibling()?.text()
 
 		val tags = doc.select("div").firstOrNull {
-			it.selectFirst("label.text-secondary")?.text() == "Genres" 
+			it.selectFirst("label.text-secondary")?.text() == "Genres"
 		}?.select("a.text-sm.mr-1.text-brand")?.mapToSet { element ->
 			MangaTag(
 				key = element.attr("href").substringAfter("/search?genre="),

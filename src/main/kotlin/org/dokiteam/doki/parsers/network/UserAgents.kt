@@ -13,5 +13,7 @@ public object UserAgents {
 
 	public const val FIREFOX_DESKTOP: String = "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/116.0"
 
-	public const val KOTATSU: String = "Kotatsu/6.8 (Android 13;;; en)"
+	public const val KOTATSU: String = "Kotatsu/9.0 (Android 16;;; en)"
+
+	public const val LEGACY_KOTATSU: String = "Kotatsu/6.8 (Android 13;;; en)"
 }

@@ -2,6 +2,7 @@ package org.dokiteam.doki.parsers.site.vi
 
 import okhttp3.Headers
 import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
 import org.dokiteam.doki.parsers.MangaLoaderContext
 import org.dokiteam.doki.parsers.MangaSourceParser
 import org.dokiteam.doki.parsers.config.ConfigKey
@@ -13,14 +14,12 @@ import org.dokiteam.doki.parsers.util.suspendlazy.getOrNull
 import org.dokiteam.doki.parsers.util.suspendlazy.suspendLazy
 import java.text.SimpleDateFormat
 import java.util.*
-import org.dokiteam.doki.parsers.Broken
 
-@Broken("Need to fix getPages")
 @MangaSourceParser("DAMCONUONG", "Dâm Cô Nương", "vi", type = ContentType.HENTAI)
 internal class DamCoNuong(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.DAMCONUONG, 30) {
 
-	override val configKeyDomain = ConfigKey.Domain("damconuong.co")
+	override val configKeyDomain = ConfigKey.Domain("damconuong.onl")
 
 	private val availableTags = suspendLazy(initializer = ::fetchTags)
 
@@ -184,42 +183,36 @@ internal class DamCoNuong(context: MangaLoaderContext) :
 		)
 	}
 
-	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
-    val doc = webClient.httpGet(chapter.url.toAbsoluteUrl(domain)).parseHtml()
+    override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
+        val doc = webClient.httpGet(chapter.url.toAbsoluteUrl(domain)).parseHtml()
+        return doc.select("div#chapter-content img").map { img ->
+            val url = resolveImageUrl(img, chapter)
+            MangaPage(
+                id = generateUid(url),
+                url = url,
+                preview = null,
+                source = source,
+            )
+        }
+    }
 
-    doc.selectFirst("script:containsData(window.encryptionConfig)")?.data()?.let { scriptContent ->
-        val fallbackUrlsRegex = Regex(""""fallbackUrls"\s*:\s*(\[.*?])""")
-        val arrayString = fallbackUrlsRegex.find(scriptContent)?.groupValues?.get(1) ?: return@let
-        val urlRegex = Regex("""(https?:\\?/\\?[^"]+\.(?:jpg|jpeg|png|webp|gif))""")
-        val scriptImages = urlRegex.findAll(arrayString).map {
-            it.groupValues[1].replace("\\/", "/")
-        }.toList()
-
-        if (scriptImages.isNotEmpty()) {
-            return scriptImages.map { url ->
-                MangaPage(id = generateUid(url), url = url, preview = null, source = source)
+    private fun resolveImageUrl(img: Element, chapter: MangaChapter): String {
+        val attrs = listOf("src", "data-src", "data-original-src")
+        for (attr in attrs) {
+            val value = img.attr(attr)
+            if (value.isNotBlank()) {
+                val url = value.trim()
+                if (!url.endsWith(".gif", ignoreCase = true)) {
+                    return url
+                }
             }
         }
+
+        // throw e
+        throw ParseException("Image src not found (or only .gif found)!", chapter.url)
     }
 
-    val tagImagePages = doc.select("div#chapter-content img").mapNotNull { img ->
-        val imageUrl = (img.attr("abs:src").takeIf { it.isNotBlank() }
-            ?: img.attr("abs:data-src").takeIf { it.isNotBlank() })
-            ?.trim()
-
-        imageUrl?.let {
-            MangaPage(id = generateUid(it), url = it, preview = null, source = source)
-        }
-    }
-
-    if (tagImagePages.isNotEmpty()) {
-        return tagImagePages
-    }
-
-    throw ParseException("Không tìm thấy bất kỳ nguồn ảnh nào (đã thử cả script và thẻ img).", chapter.url)
-}
-
-	private fun parseChapterDate(date: String?): Long {
+    private fun parseChapterDate(date: String?): Long {
 		if (date == null) return 0
 		return when {
 			date.contains("giây trước") -> System.currentTimeMillis() - date.removeSuffix(" giây trước").toLong() * 1000

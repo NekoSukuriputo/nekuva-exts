@@ -2,6 +2,7 @@ package org.dokiteam.doki.parsers.site.wpcomics.vi
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import org.dokiteam.doki.parsers.Broken
 import org.dokiteam.doki.parsers.MangaLoaderContext
 import org.dokiteam.doki.parsers.MangaSourceParser
 import org.dokiteam.doki.parsers.model.*
@@ -10,6 +11,7 @@ import org.dokiteam.doki.parsers.util.*
 import org.dokiteam.doki.parsers.util.json.getStringOrNull
 import java.text.SimpleDateFormat
 
+@Broken("Need to fix fetchChapters")
 @MangaSourceParser("NETTRUYEN", "NetTruyen", "vi")
 internal class NetTruyen(context: MangaLoaderContext) :
 	WpComicsParser(context, MangaParserSource.NETTRUYEN, "nettruyenar.com", 36) {

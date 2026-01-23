@@ -13,7 +13,7 @@ import org.dokiteam.doki.parsers.util.parseHtml
 @MangaSourceParser("MANGAFOREST", "MangaForest", "en")
 internal class MangaForest(context: MangaLoaderContext) :
 	MadthemeParser(context, MangaParserSource.MANGAFOREST, "mangaforest.me") {
-	
+
 	private val subDomain = "sb.mbcdn.xyz"
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {

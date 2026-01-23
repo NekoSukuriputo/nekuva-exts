@@ -5,7 +5,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import org.dokiteam.doki.parsers.MangaLoaderContext
 import org.dokiteam.doki.parsers.MangaSourceParser
-import org.dokiteam.doki.parsers.config.ConfigKey
 import org.dokiteam.doki.parsers.exception.ParseException
 import org.dokiteam.doki.parsers.model.*
 import org.dokiteam.doki.parsers.site.wpcomics.WpComicsParser
@@ -16,11 +15,6 @@ import java.util.*
 @MangaSourceParser("NEWTRUYEN", "NewTruyen", "vi")
 internal class NewTruyen(context: MangaLoaderContext) :
 	WpComicsParser(context, MangaParserSource.NEWTRUYEN, "newtruyentranh5.com", 36) {
-
-    override val configKeyDomain = ConfigKey.Domain(
-        "newtruyentranh5.com",
-        "newtruyenhot.pro",
-    )
 
 	override suspend fun getFilterOptions() = MangaListFilterOptions(
 		availableTags = getAvailableTags(),

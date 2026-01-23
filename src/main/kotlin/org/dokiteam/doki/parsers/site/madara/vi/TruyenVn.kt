@@ -6,7 +6,7 @@ import org.dokiteam.doki.parsers.model.ContentType
 import org.dokiteam.doki.parsers.model.MangaParserSource
 import org.dokiteam.doki.parsers.site.madara.MadaraParser
 
-@MangaSourceParser("TRUYENVN", "TruyenVn", "vi", ContentType.HENTAI)
+@MangaSourceParser("TRUYENVN", "KhoTruyen", "vi", ContentType.HENTAI)
 internal class TruyenVn(context: MangaLoaderContext) :
 	MadaraParser(context, MangaParserSource.TRUYENVN, "truyenvn.shop", 20) {
 	override val listUrl = "truyen-tranh/"
