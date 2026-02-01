@@ -14,7 +14,7 @@ import org.dokiteam.doki.parsers.util.selectFirstOrThrow
 @MangaSourceParser("ULASCOMIC", "UlasComic", "id")
 internal class UlasComic(context: MangaLoaderContext):
 	ZeistMangaParser(context, MangaParserSource.ULASCOMIC, "www.ulascomic00.xyz") {
-
+	
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
 		val doc = webClient.httpGet(chapter.url.toAbsoluteUrl(domain)).parseHtml()
 		return doc.selectFirstOrThrow("script:containsData(config['chapterImage'])")

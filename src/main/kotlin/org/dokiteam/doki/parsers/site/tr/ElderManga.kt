@@ -155,7 +155,7 @@ internal class ElderManga(context: MangaLoaderContext):
                 MangaChapter(
                     id = generateUid(href),
                     title = el.selectFirstOrThrow("h3").text(),
-                    number = (i + 1).toFloat(),
+                    number = (i + 1).toFloat(), 
                     volume = 0,
                     url = href,
                     scanlator = null,
@@ -176,7 +176,7 @@ internal class ElderManga(context: MangaLoaderContext):
                 MangaPage(
                     id = generateUid(url),
                     url = "https://$cdnSuffix/upload/series/$url",
-                    preview = null,
+                    preview = null, 
                     source = source,
                 )
             }
@@ -185,17 +185,17 @@ internal class ElderManga(context: MangaLoaderContext):
 
     private suspend fun fetchTags(): Set<MangaTag> {
         val doc = webClient.httpGet("https://$domain/search").parseHtml()
-        val script = doc.select("script").find { it.html().contains("self.__next_f.push([1,\"10:[\\\"\\$,\\\"section") }?.html()
+        val script = doc.select("script").find { it.html().contains("self.__next_f.push([1,\"10:[\\\"\\$,\\\"section") }?.html() 
             ?: return emptySet()
-
+        
         val jsonStr = script.substringAfter("\"category\":[")
             .substringBefore("],\"searchParams\":{}")
             .replace("\\", "")
-
+        
         val jsonArray = JSONArray("[$jsonStr]")
         return jsonArray.mapJSONToSet { jo ->
             MangaTag(
-                key = jo.getString("id"),
+                key = jo.getString("id"), 
                 title = jo.getString("name"),
                 source = source
             )

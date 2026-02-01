@@ -41,7 +41,7 @@ internal class DocTruyen5s(context: MangaLoaderContext) :
 		return pageListDoc.selectOrThrow("div.separator a").mapNotNull { element ->
 			val originalUrl = element.attr("href").takeIf { it.isNotEmpty() } ?: element.attr("src")
 			if (originalUrl.isEmpty()) return@mapNotNull null
-
+			
 			val workingUrl = addCdnServers(originalUrl).firstOrNull { url ->
 				checkMangaImgs(url)
 			}
@@ -59,7 +59,7 @@ internal class DocTruyen5s(context: MangaLoaderContext) :
 
 	private fun addCdnServers(url: String): List<String> {
 		if (!url.startsWith("http")) return emptyList()
-
+		
 		val urlFinal = url.replace("https://", "")
 		return listOf(
 			url,

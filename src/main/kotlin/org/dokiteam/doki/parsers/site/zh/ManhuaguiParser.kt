@@ -162,9 +162,9 @@ internal class ManhuaguiParser(context: MangaLoaderContext) :
 		order: SortOrder,
 		filter: MangaListFilter,
 	): List<Manga> {
-
+        
         // Flag of whether there is title query param
-		var flagHasTitleQuery = false
+		var flagHasTitleQuery = false 
 
 		val url = buildString {
 			var queryFull: String?
@@ -354,12 +354,12 @@ internal class ManhuaguiParser(context: MangaLoaderContext) :
 
     	private fun decompressLZStringFromBase64(input: String): String? {
 	        if (input.isBlank()) return null
-
+	
 	        data class Data(var value: Char = '0', var position: Int = 0, var index: Int = 1)
 
 			fun Int.power() = 1 shl this
 			fun Int.string() = this.toChar().toString()
-
+	
 	        val keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
 	        val getNextValue = { it: Int -> keyStr.indexOf(input[it]).toChar() }
 	        val builder = StringBuilder()
@@ -367,7 +367,7 @@ internal class ManhuaguiParser(context: MangaLoaderContext) :
 	        val data = Data(getNextValue(0), 32, 1)
 	        var (next, bits, numBits, enlargeIn, dictSize) = listOf(0, 0, 3, 4, 4)
 	        var (c, w, entry) = listOf("", "", "")
-
+	        
 	        fun doPower(initBits: Int, initPower: Int, initMaxPower: Int, mode: Int = 0) {
 	            bits = initBits
 	            var power = initPower
@@ -390,14 +390,14 @@ internal class ManhuaguiParser(context: MangaLoaderContext) :
 					}, bits.string())
 	            }
 	        }
-
+	
 	        fun checkEnlargeIn() {
 	            if (enlargeIn == 0) {
 	                enlargeIn = numBits.power()
 	                numBits++
 	            }
 	        }
-
+	
 	        doPower(bits, 1, 2)
 			next = bits
 	        when (next) {
@@ -405,11 +405,11 @@ internal class ManhuaguiParser(context: MangaLoaderContext) :
 	            1 -> doPower(0, 1, 16, 1)
 	            2 -> return ""
 	        }
-
+	        
 	        dictionary.add(3, c)
 	        w = c
 	        builder.append(w)
-
+	        
 	        while (true) {
 	            if (data.index > input.length) return ""
 	            doPower(0, 1, numBits)
@@ -437,16 +437,16 @@ internal class ManhuaguiParser(context: MangaLoaderContext) :
 	            n < 36 -> ('a' + (n - 10)).toString()
 	            else -> ('A' + (n - 36)).toString()
 	        }
-
+	        
 	        fun encode62(num: Int): String = if (num >= 62) encode62(num / 62) + base62(num % 62) else base62(num)
-
+	
 	        val working = syms.foldRightIndexed(src) { idx, replacement, acc ->
 	            if (replacement.isNotEmpty()) {
 	                val token = encode62(idx)
 	                Regex("\\b${Regex.escape(token)}\\b").replace(acc, replacement)
 	            } else acc
 	        }
-
+	
 	        return JSONObject(Regex("""\((\{.+\})\)""", RegexOption.DOT_MATCHES_ALL)
 	            .find(working)?.groupValues?.get(1)
 	            ?: throw IllegalArgumentException("JSON payload not found after unpacking."))

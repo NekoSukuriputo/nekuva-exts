@@ -5,14 +5,17 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import org.jsoup.HttpStatusException
 import org.jsoup.nodes.Document
 import org.dokiteam.doki.parsers.Broken
 import org.dokiteam.doki.parsers.MangaLoaderContext
 import org.dokiteam.doki.parsers.MangaSourceParser
 import org.dokiteam.doki.parsers.config.ConfigKey
 import org.dokiteam.doki.parsers.core.AbstractMangaParser
+import org.dokiteam.doki.parsers.exception.ParseException
 import org.dokiteam.doki.parsers.model.*
 import org.dokiteam.doki.parsers.util.*
+import java.net.HttpURLConnection
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -90,13 +93,29 @@ internal class HentaiVNParser(context: MangaLoaderContext) : AbstractMangaParser
 						append(page)
 					}.toAbsoluteUrl(domain)
 
-					val docs = webClient.httpGet(url).parseHtml()
+					val docs = try {
+						webClient.httpGet(url).parseHtml()
+					} catch (e: HttpStatusException) {
+						if (e.statusCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
+							return emptyList()
+						} else {
+							throw ParseException("Can't fetch data from source!", url)
+						}
+					}
 					return parseAdvanceSearch(docs, page)
 				} else {
 					val site = if (order == SortOrder.UPDATED) "/chap-moi" else "/danh-sach"
 					val url = "$site.html?page=$page".toAbsoluteUrl(domain)
 					context.cookieJar.insertCookies(domain, *getSortCookies(order))
-					val docs = webClient.httpGet(url).parseHtml()
+					val docs = try {
+						webClient.httpGet(url).parseHtml()
+					} catch (e: HttpStatusException) {
+						if (e.statusCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
+							return emptyList()
+						} else {
+							throw ParseException("Can't fetch data from source!", url)
+						}
+					}
 					parseMainList(docs, page)
 				}
 			}
