@@ -7,7 +7,7 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
-group = "org.dokiteam"
+group = "org.nekosukuriputo"
 version = "1.0"
 
 tasks.test {
