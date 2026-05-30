@@ -1,0 +1,17 @@
+package org.nekosukuriputo.nekuva.parsers.site.heancms.en
+
+import org.nekosukuriputo.nekuva.parsers.Broken
+import org.nekosukuriputo.nekuva.parsers.MangaLoaderContext
+import org.nekosukuriputo.nekuva.parsers.MangaSourceParser
+import org.nekosukuriputo.nekuva.parsers.model.MangaParserSource
+import org.nekosukuriputo.nekuva.parsers.site.heancms.HeanCms
+
+@Broken("Not dead, changed template")
+@MangaSourceParser("TEMPLESCAN", "TempleScan", "en")
+internal class TempleScan(context: MangaLoaderContext) :
+	HeanCms(context, MangaParserSource.TEMPLESCAN, "templetoons.com") {
+	override val pathManga = "comic"
+
+	override val apiPath: String
+		get() = "$domain/api"
+}

@@ -29,11 +29,11 @@ body:
             required: false
 
     -   type: input
-        id: doki-version
+        id: nekuva-version
         attributes:
-            label: Doki version
+            label: Nekuva version
             description: |
-                You can find your Doki version in **Settings → About**.
+                You can find your Nekuva version in **Settings → About**.
             placeholder: |
                 Example: "1.0"
         validations:

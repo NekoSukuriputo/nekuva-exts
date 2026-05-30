@@ -1,0 +1,17 @@
+package org.nekosukuriputo.nekuva.parsers.site.madara.id
+
+import org.nekosukuriputo.nekuva.parsers.Broken
+import org.nekosukuriputo.nekuva.parsers.MangaLoaderContext
+import org.nekosukuriputo.nekuva.parsers.MangaSourceParser
+import org.nekosukuriputo.nekuva.parsers.model.ContentType
+import org.nekosukuriputo.nekuva.parsers.model.MangaParserSource
+import org.nekosukuriputo.nekuva.parsers.site.madara.MadaraParser
+
+@Broken
+@MangaSourceParser("WORLDMANHWAS", "WorldManhwas", "id", ContentType.HENTAI)
+internal class WorldManhwas(context: MangaLoaderContext) :
+	MadaraParser(context, MangaParserSource.WORLDMANHWAS, "worldmanhwas.zone", 10) {
+	override val tagPrefix = "genre/"
+	override val listUrl = "komik/"
+	override val datePattern = "d MMMM yyyy"
+}

@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "doki-exts"
-include("doki-ksp")
+rootProject.name = "nekuva-exts"
+include("nekuva-ksp")

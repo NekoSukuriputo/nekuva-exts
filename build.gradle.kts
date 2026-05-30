@@ -7,7 +7,7 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
-group = "org.dokiteam"
+group = "org.nekosukuriputo"
 version = "1.0"
 
 tasks.test {
@@ -24,7 +24,7 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
             "-opt-in=kotlin.RequiresOptIn",
             "-opt-in=kotlin.contracts.ExperimentalContracts",
             "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
-            "-opt-in=org.dokiteam.doki.parsers.InternalParsersApi",
+            "-opt-in=org.nekosukuriputo.nekuva.parsers.InternalParsersApi",
         )
     }
 }
@@ -51,7 +51,7 @@ dependencies {
     implementation(libs.androidx.collection)
     api(libs.jsoup)
 
-    ksp(project(":doki-ksp"))
+    ksp(project(":nekuva-ksp"))
 
     testImplementation(libs.junit.api)
     testImplementation(libs.junit.engine)

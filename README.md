@@ -1,4 +1,14 @@
-# Extensions for Doki (Source code)
+# Extensions for nekuva (Source code)
+
+## Credits & Lineage
+
+nekuva-exts is a fork of [DokiTeam/doki-exts](https://github.com/DokiTeam/doki-exts),
+which itself derives from [KotatsuApp/kotatsu-parsers](https://github.com/KotatsuApp/kotatsu-parsers).
+Huge thanks to the Doki and Kotatsu teams and all upstream contributors.
+
+It is now maintained independently as **nekuva-exts**, the manga source library for the
+**Nekuva** app, and is being adapted toward Kotlin Multiplatform. Licensed under GPL-3.0,
+same as the upstream projects.
 
 ### Please give the repo a :star:
 
@@ -10,25 +20,25 @@
 
 ---------------------------------------
 
-### Automation for Doki (Source code)
+### Automation for nekuva (Source code)
 
-https://github.com/DokiTeam/build-apps
+https://github.com/nekuvaTeam/build-apps
 
-### Doki (Source code)
+### nekuva (Source code)
 
-https://github.com/DokiTeam/Doki
+https://github.com/NekoSukuriputo/Nekuva
 
 ### Report app issues
 
-https://github.com/DokiTeam/Doki/issues/new/
+https://github.com/NekoSukuriputo/Nekuva/issues/new/
 
 ### Report build issues
 
-https://github.com/DokiTeam/build-apps/issues/new/
+https://github.com/nekuvaTeam/build-apps/issues/new/
 
 ### Report extension issues
 
-https://github.com/DokiTeam/doki-exts/issues/new/
+https://github.com/NekoSukuriputo/Nekuva-exts/issues/new/
 
 ****
 
