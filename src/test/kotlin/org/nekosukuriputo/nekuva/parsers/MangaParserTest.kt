@@ -14,7 +14,7 @@ import org.nekosukuriputo.nekuva.parsers.model.search.QueryCriteria.Include
 import org.nekosukuriputo.nekuva.parsers.model.search.SearchableField.*
 import org.nekosukuriputo.nekuva.parsers.util.medianOrNull
 import org.nekosukuriputo.nekuva.parsers.util.mimeType
-import org.dokiteam.doki.test_util.*
+import org.nekosukuriputo.nekuva.test_util.*
 import kotlin.time.Duration.Companion.minutes
 
 //@ExtendWith(AuthCheckExtension::class)

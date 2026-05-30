@@ -1,4 +1,4 @@
-package org.dokiteam.doki.core.parser
+package org.nekosukuriputo.nekuva.core.parser
 
 import org.jsoup.nodes.Element
 import org.nekosukuriputo.nekuva.parsers.util.attrOrNull

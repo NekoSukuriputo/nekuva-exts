@@ -5,8 +5,8 @@ import okhttp3.CookieJar
 import okhttp3.HttpUrl
 import org.nekosukuriputo.nekuva.parsers.util.insertCookie
 import org.nekosukuriputo.nekuva.parsers.util.splitByWhitespace
-import org.dokiteam.doki.test_util.component6
-import org.dokiteam.doki.test_util.component7
+import org.nekosukuriputo.nekuva.test_util.component6
+import org.nekosukuriputo.nekuva.test_util.component7
 import java.io.InputStream
 import java.util.*
 import java.util.concurrent.TimeUnit

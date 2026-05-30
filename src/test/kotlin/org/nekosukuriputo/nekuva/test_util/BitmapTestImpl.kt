@@ -1,4 +1,4 @@
-package org.dokiteam.doki.test_util
+package org.nekosukuriputo.nekuva.test_util
 
 import org.nekosukuriputo.nekuva.parsers.bitmap.Bitmap
 import org.nekosukuriputo.nekuva.parsers.bitmap.Rect

@@ -1,4 +1,4 @@
-package org.dokiteam.doki.test_util
+package org.nekosukuriputo.nekuva.test_util
 
 import androidx.collection.ArraySet
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull

@@ -7,7 +7,7 @@ import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import org.jsoup.select.QueryParser
 import org.jsoup.select.Selector
-import org.dokiteam.doki.core.parser.CSSBackground
+import org.nekosukuriputo.nekuva.core.parser.CSSBackground
 import org.nekosukuriputo.nekuva.parsers.InternalParsersApi
 import org.nekosukuriputo.nekuva.parsers.exception.ParseException
 import kotlin.contracts.contract

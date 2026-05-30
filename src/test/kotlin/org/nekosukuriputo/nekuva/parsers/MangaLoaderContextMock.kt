@@ -12,7 +12,7 @@ import org.nekosukuriputo.nekuva.parsers.model.MangaSource
 import org.nekosukuriputo.nekuva.parsers.network.UserAgents
 import org.nekosukuriputo.nekuva.parsers.util.await
 import org.nekosukuriputo.nekuva.parsers.util.requireBody
-import org.dokiteam.doki.test_util.BitmapTestImpl
+import org.nekosukuriputo.nekuva.test_util.BitmapTestImpl
 import java.awt.image.BufferedImage
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
