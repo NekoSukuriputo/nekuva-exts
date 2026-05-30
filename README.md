@@ -1,4 +1,4 @@
-# Extensions for Doki (Source code)
+# Extensions for nekuva (Source code)
 
 ### Please give the repo a :star:
 
@@ -10,25 +10,25 @@
 
 ---------------------------------------
 
-### Automation for Doki (Source code)
+### Automation for nekuva (Source code)
 
-https://github.com/DokiTeam/build-apps
+https://github.com/nekuvaTeam/build-apps
 
-### Doki (Source code)
+### nekuva (Source code)
 
-https://github.com/DokiTeam/Doki
+https://github.com/NekoSukuriputo/Nekuva
 
 ### Report app issues
 
-https://github.com/DokiTeam/Doki/issues/new/
+https://github.com/NekoSukuriputo/Nekuva/issues/new/
 
 ### Report build issues
 
-https://github.com/DokiTeam/build-apps/issues/new/
+https://github.com/nekuvaTeam/build-apps/issues/new/
 
 ### Report extension issues
 
-https://github.com/DokiTeam/doki-exts/issues/new/
+https://github.com/NekoSukuriputo/Nekuva-exts/issues/new/
 
 ****
 
