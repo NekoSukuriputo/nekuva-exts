@@ -51,7 +51,7 @@ dependencies {
     implementation(libs.androidx.collection)
     api(libs.jsoup)
 
-    ksp(project(":doki-ksp"))
+    ksp(project(":nekuva-ksp"))
 
     testImplementation(libs.junit.api)
     testImplementation(libs.junit.engine)
