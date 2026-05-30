@@ -2,11 +2,11 @@ package org.dokiteam.doki.test_util
 
 import androidx.collection.ArraySet
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
-import org.dokiteam.doki.parsers.model.Manga
-import org.dokiteam.doki.parsers.model.MangaParserSource
-import org.dokiteam.doki.parsers.model.RATING_UNKNOWN
-import org.dokiteam.doki.parsers.util.LONG_HASH_SEED
-import org.dokiteam.doki.parsers.util.toRelativeUrl
+import org.nekosukuriputo.nekuva.parsers.model.Manga
+import org.nekosukuriputo.nekuva.parsers.model.MangaParserSource
+import org.nekosukuriputo.nekuva.parsers.model.RATING_UNKNOWN
+import org.nekosukuriputo.nekuva.parsers.util.LONG_HASH_SEED
+import org.nekosukuriputo.nekuva.parsers.util.toRelativeUrl
 
 private val PATTERN_URL_ABSOLUTE = Regex("^https?://[\\s\\S]+", setOf(RegexOption.IGNORE_CASE))
 private val PATTERN_URL_RELATIVE = Regex("^/[\\s\\S]+", setOf(RegexOption.IGNORE_CASE))

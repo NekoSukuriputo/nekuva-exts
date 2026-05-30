@@ -1,0 +1,12 @@
+package org.nekosukuriputo.nekuva.parsers.site.madara.tr
+
+import org.nekosukuriputo.nekuva.parsers.MangaLoaderContext
+import org.nekosukuriputo.nekuva.parsers.MangaSourceParser
+import org.nekosukuriputo.nekuva.parsers.model.MangaParserSource
+import org.nekosukuriputo.nekuva.parsers.site.madara.MadaraParser
+
+@MangaSourceParser("TRMANGAOKU", "TrMangaOku", "tr")
+internal class TrMangaOku(context: MangaLoaderContext) :
+	MadaraParser(context, MangaParserSource.TRMANGAOKU, "trmangaoku.com") {
+	override val tagPrefix = "tur/"
+}

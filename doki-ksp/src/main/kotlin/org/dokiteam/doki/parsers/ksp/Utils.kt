@@ -1,4 +1,4 @@
-package org.dokiteam.doki.parsers.ksp
+package org.nekosukuriputo.nekuva.parsers.ksp
 
 import java.util.*
 

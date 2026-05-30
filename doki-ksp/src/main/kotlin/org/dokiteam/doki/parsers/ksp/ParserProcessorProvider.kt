@@ -1,4 +1,4 @@
-package org.dokiteam.doki.parsers.ksp
+package org.nekosukuriputo.nekuva.parsers.ksp
 
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment

@@ -1,0 +1,11 @@
+package org.nekosukuriputo.nekuva.parsers.site.manhwaz.vi
+
+import org.nekosukuriputo.nekuva.parsers.MangaLoaderContext
+import org.nekosukuriputo.nekuva.parsers.MangaSourceParser
+import org.nekosukuriputo.nekuva.parsers.model.ContentType
+import org.nekosukuriputo.nekuva.parsers.model.MangaParserSource
+import org.nekosukuriputo.nekuva.parsers.site.manhwaz.ManhwaZ
+
+@MangaSourceParser("SAYHENTAI", "SayHentai", "vi", ContentType.HENTAI)
+internal class SayHentai(context: MangaLoaderContext) :
+	ManhwaZ(context, MangaParserSource.SAYHENTAI, "sayhentai.live")

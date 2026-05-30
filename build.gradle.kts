@@ -24,7 +24,7 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
             "-opt-in=kotlin.RequiresOptIn",
             "-opt-in=kotlin.contracts.ExperimentalContracts",
             "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
-            "-opt-in=org.dokiteam.doki.parsers.InternalParsersApi",
+            "-opt-in=org.nekosukuriputo.nekuva.parsers.InternalParsersApi",
         )
     }
 }

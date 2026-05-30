@@ -1,4 +1,4 @@
-package org.dokiteam.doki.parsers.ksp
+package org.nekosukuriputo.nekuva.parsers.ksp
 
 import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.processing.*
@@ -20,7 +20,7 @@ class ParserProcessor(
     private val sourceNamePattern = Regex("[A-Z_][A-Z0-9_]{3,}")
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val symbols = resolver.getSymbolsWithAnnotation("org.dokiteam.doki.parsers.MangaSourceParser")
+        val symbols = resolver.getSymbolsWithAnnotation("org.nekosukuriputo.nekuva.parsers.MangaSourceParser")
         val ret = symbols.filterNot { it.validate() }.toList()
         if (!symbols.iterator().hasNext()) {
             return ret
@@ -30,7 +30,7 @@ class ParserProcessor(
             try {
                 codeGenerator.createNewFile(
                     dependencies = dependencies,
-                    packageName = "org.dokiteam.doki.parsers",
+                    packageName = "org.nekosukuriputo.nekuva.parsers",
                     fileName = "MangaParserFactory",
                 )
             } catch (e: FileAlreadyExistsException) {
@@ -41,7 +41,7 @@ class ParserProcessor(
             try {
                 codeGenerator.createNewFile(
                     dependencies = dependencies,
-                    packageName = "org.dokiteam.doki.parsers.model",
+                    packageName = "org.nekosukuriputo.nekuva.parsers.model",
                     fileName = "MangaSource",
                 )
             } catch (e: FileAlreadyExistsException) {
@@ -67,10 +67,10 @@ class ParserProcessor(
         }
         factoryWriter?.write(
             """
-			package org.dokiteam.doki.parsers
+			package org.nekosukuriputo.nekuva.parsers
 
-			import org.dokiteam.doki.parsers.model.MangaParserSource
-			import org.dokiteam.doki.parsers.core.MangaParserWrapper
+			import org.nekosukuriputo.nekuva.parsers.model.MangaParserSource
+			import org.nekosukuriputo.nekuva.parsers.core.MangaParserWrapper
 
 			internal fun MangaParserSource.newParser(context: MangaLoaderContext): MangaParser = when (this) {
 
@@ -78,7 +78,7 @@ class ParserProcessor(
         )
         sourcesWriter?.write(
             """
-			package org.dokiteam.doki.parsers.model
+			package org.nekosukuriputo.nekuva.parsers.model
 
 			public enum class MangaParserSource(
 				public val title: String,

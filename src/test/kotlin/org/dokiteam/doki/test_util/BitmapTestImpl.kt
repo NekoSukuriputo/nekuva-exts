@@ -1,7 +1,7 @@
 package org.dokiteam.doki.test_util
 
-import org.dokiteam.doki.parsers.bitmap.Bitmap
-import org.dokiteam.doki.parsers.bitmap.Rect
+import org.nekosukuriputo.nekuva.parsers.bitmap.Bitmap
+import org.nekosukuriputo.nekuva.parsers.bitmap.Rect
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import javax.imageio.ImageIO
