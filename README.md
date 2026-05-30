@@ -32,6 +32,16 @@ https://github.com/NekoSukuriputo/Nekuva-exts/issues/new/
 
 ****
 
+## Credits & Lineage
+
+nekuva-exts is a fork of [DokiTeam/doki-exts](https://github.com/DokiTeam/doki-exts),
+which itself derives from [KotatsuApp/kotatsu-parsers](https://github.com/KotatsuApp/kotatsu-parsers).
+Huge thanks to the Doki and Kotatsu teams and all upstream contributors.
+
+It is now maintained independently as **nekuva-exts**, the manga source library for the
+**Nekuva** app, and is being adapted toward Kotlin Multiplatform. Licensed under GPL-3.0,
+same as the upstream projects.
+
 ### License
 
 [![GNU GPLv3 Image](https://www.gnu.org/graphics/gplv3-127x51.png)](http://www.gnu.org/licenses/gpl-3.0.en.html)
