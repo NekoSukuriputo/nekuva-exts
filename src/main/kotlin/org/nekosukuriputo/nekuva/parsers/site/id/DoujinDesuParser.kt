@@ -28,7 +28,9 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 
 	override val filterCapabilities: MangaListFilterCapabilities
 		get() = MangaListFilterCapabilities(
+			isMultipleTagsSupported = false,
 			isSearchSupported = true,
+			isSearchWithFiltersSupported = false,
 			isAuthorSearchSupported = true,
 		)
 
@@ -52,61 +54,70 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
 		val url = urlBuilder().apply {
-			if (filter.tags.isNotEmpty()) {
+			if (!filter.query.isNullOrBlank()) {
+				if (page > 1) {
+					addPathSegment("page")
+					addPathSegment(page.toString())
+				}
+				addQueryParameter("s", filter.query)
+			} else if (filter.tags.isNotEmpty()) {
 				addPathSegment("genre")
-				filter.tags.oneOrThrowIfMany()?.key?.let { it ->
-					addPathSegment(it.lowercase().splitByWhitespace().joinToString("-") { it })
+				filter.tags.oneOrThrowIfMany()?.key?.let { tag ->
+					addPathSegment(tag.lowercase().splitByWhitespace().joinToString("-") { it })
+				}
+				if (page > 1) {
+					addPathSegment("page")
+					addPathSegment(page.toString())
 				}
 			} else if (!filter.author.isNullOrEmpty()) {
 				addPathSegment("author")
 				addPathSegment(filter.author.splitByWhitespace().joinToString("-") { it.lowercase() })
+				if (page > 1) {
+					addPathSegment("page")
+					addPathSegment(page.toString())
+				}
 			} else {
 				addPathSegment("manga")
-			}
-
-			if (page > 1) {
-				addPathSegment("page")
-				addPathSegment(page.toString())
-			}
-
-			if (!filter.states.isEmpty() &&
-				filter.author.isNullOrEmpty() &&
-				filter.tags.isEmpty()
-			) {
-				filter.states.oneOrThrowIfMany()?.let {
-					addQueryParameter(
-						"status",
-						when (it) {
-							MangaState.ONGOING -> "Publishing"
-							MangaState.FINISHED -> "Finished"
-							else -> ""
-						},
-					)
+				if (page > 1) {
+					addPathSegment("page")
+					addPathSegment(page.toString())
 				}
-			}
 
-			when (filter.types.oneOrThrowIfMany()) {
-				ContentType.MANHWA -> addQueryParameter("type", "Manhwa")
-				ContentType.DOUJINSHI -> addQueryParameter("type", "Doujinshi")
-				else -> addQueryParameter("type", "Manga")
+				if (!filter.states.isEmpty()) {
+					filter.states.oneOrThrowIfMany()?.let {
+						addQueryParameter(
+							"status",
+							when (it) {
+								MangaState.ONGOING -> "Publishing"
+								MangaState.FINISHED -> "Finished"
+								else -> ""
+							},
+						)
+					}
+				}
+
+				when (filter.types.oneOrThrowIfMany()) {
+					ContentType.MANHWA -> addQueryParameter("type", "Manhwa")
+					ContentType.DOUJINSHI -> addQueryParameter("type", "Doujinshi")
+					else -> addQueryParameter("type", "Manga")
+				}
 			}
 		}.build()
 
 		val response = webClient.httpGet(url).parseHtml()
-		return response.selectFirst("section#archives .entries")
-			?.selectFirst("div.entries")
-			?.select(".entry")
-			?.mapNotNull {
-				val href = it.selectFirst(".metadata > a")?.attr("href") ?: return@mapNotNull null
+		return response.select("div.entries article.entry")
+			.mapNotNull {
+				val a = it.selectFirst("a") ?: return@mapNotNull null
+				val href = a.attr("href")
 				Manga(
 					id = generateUid(href),
-					title = it.selectFirst(".metadata > a")?.attr("title").orEmpty(),
+					title = a.attr("title").ifEmpty { a.selectFirst(".title span")?.text().orEmpty() },
 					altTitles = emptySet(),
 					url = href,
 					publicUrl = href.toAbsoluteUrl(domain),
 					rating = RATING_UNKNOWN,
 					contentRating = ContentRating.ADULT,
-					coverUrl = it.selectFirst(".thumbnail > img")?.src(),
+					coverUrl = a.selectFirst(".thumbnail img")?.src(),
 					tags = emptySet(),
 					state = null,
 					authors = emptySet(),
@@ -114,7 +125,7 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 					description = null,
 					source = source,
 				)
-			} ?: emptyList()
+			}
 	}
 
 	override suspend fun getDetails(manga: Manga): Manga {
@@ -167,11 +178,11 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 
 		for (attempt in 1..3) {
 			val document = webClient.httpPost("/themes/ajax/ch.php".toAbsoluteUrl(domain), "id=$id").parseHtml()
-			
+
 			// Jika response tidak mengandung <title>, berarti ini adalah fragment HTML gambar yang valid
 			if (document.selectFirst("title") == null) {
 				val images = document.select("img").filterNot { it.parent()?.tagName() == "a" }
-				
+
 				if (images.isNotEmpty()) {
 					return images.map {
 						val url = it.attrAsRelativeUrl("src")
@@ -184,14 +195,14 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 					}
 				}
 			}
-			
+
 			if (attempt == 3) {
 				throw Exception("Gagal memuat gambar (ter-redirect oleh server) setelah 3 kali percobaan. Silahkan refresh ulang.")
 			}
-			
+
 			kotlinx.coroutines.delay(1000)
 		}
-		
+
 		throw Exception("Gagal memuat gambar chapter.")
 	}
 
