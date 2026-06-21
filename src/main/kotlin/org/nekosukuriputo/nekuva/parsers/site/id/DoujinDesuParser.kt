@@ -160,9 +160,23 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
-		val id = webClient.httpGet(chapter.url.toAbsoluteUrl(domain)).parseHtml()
-			.requireElementById("reader")
-			.attr("data-id")
+		val document = webClient.httpGet(chapter.url.removeSuffix("/").toAbsoluteUrl(domain)).parseHtml()
+
+		val anuEl = document.getElementById("anu")
+		if (anuEl != null) {
+			return anuEl.select("img").map {
+				val url = it.attrAsRelativeUrl("src")
+				MangaPage(
+					id = generateUid(url),
+					url = url,
+					preview = null,
+					source = source,
+				)
+			}
+		}
+
+		val readerEl = document.requireElementById("reader")
+		val id = readerEl.attr("data-id")
 		return webClient.httpPost("/themes/ajax/ch.php".toAbsoluteUrl(domain), "id=$id").parseHtml()
 			.select("img")
 			.map {
