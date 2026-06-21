@@ -160,34 +160,39 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
-		val document = webClient.httpGet(chapter.url.removeSuffix("/").toAbsoluteUrl(domain)).parseHtml()
+		val chapterUrl = chapter.url.removeSuffix("/")
+		val id = webClient.httpGet(chapterUrl.toAbsoluteUrl(domain)).parseHtml()
+			.requireElementById("reader")
+			.attr("data-id")
 
-		val anuEl = document.getElementById("anu")
-		if (anuEl != null) {
-			return anuEl.select("img").map {
-				val url = it.attrAsRelativeUrl("src")
-				MangaPage(
-					id = generateUid(url),
-					url = url,
-					preview = null,
-					source = source,
-				)
+		for (attempt in 1..3) {
+			val document = webClient.httpPost("/themes/ajax/ch.php".toAbsoluteUrl(domain), "id=$id").parseHtml()
+			
+			// Jika response tidak mengandung <title>, berarti ini adalah fragment HTML gambar yang valid
+			if (document.selectFirst("title") == null) {
+				val images = document.select("img").filterNot { it.parent()?.tagName() == "a" }
+				
+				if (images.isNotEmpty()) {
+					return images.map {
+						val url = it.attrAsRelativeUrl("src")
+						MangaPage(
+							id = generateUid(url),
+							url = url,
+							preview = null,
+							source = source,
+						)
+					}
+				}
 			}
+			
+			if (attempt == 3) {
+				throw Exception("Gagal memuat gambar (ter-redirect oleh server) setelah 3 kali percobaan. Silahkan refresh ulang.")
+			}
+			
+			kotlinx.coroutines.delay(1000)
 		}
-
-		val readerEl = document.requireElementById("reader")
-		val id = readerEl.attr("data-id")
-		return webClient.httpPost("/themes/ajax/ch.php".toAbsoluteUrl(domain), "id=$id").parseHtml()
-			.select("img")
-			.map {
-				val url = it.attrAsRelativeUrl("src")
-				MangaPage(
-					id = generateUid(url),
-					url = url,
-					preview = null,
-					source = source,
-				)
-			}
+		
+		throw Exception("Gagal memuat gambar chapter.")
 	}
 
 	private suspend fun fetchAvailableTags(): Set<MangaTag> {
