@@ -5,8 +5,9 @@ import okhttp3.Request
 import okhttp3.Response
 import org.nekosukuriputo.nekuva.parsers.model.MangaParserSource
 import org.nekosukuriputo.nekuva.parsers.model.MangaSource
+import org.nekosukuriputo.nekuva.parsers.network.CommonHeaders
 
-private const val HEADER_REFERER = "Referer"
+private const val HEADER_REFERER = CommonHeaders.REFERER
 
 internal class CommonHeadersInterceptor : Interceptor {
 
