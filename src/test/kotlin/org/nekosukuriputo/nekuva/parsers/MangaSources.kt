@@ -1,7 +1,6 @@
 package org.nekosukuriputo.nekuva.parsers
 
 import org.junit.jupiter.params.provider.EnumSource
-import org.junit.jupiter.params.provider.EnumSource.Mode.EXCLUDE
 import org.nekosukuriputo.nekuva.parsers.model.MangaParserSource
 
 // Change 'names' to test specified parsers

@@ -22,6 +22,16 @@ fetch catalogs, details, chapters, and pages from each source.
 Keeping parsers in their own repository means the UI app stays free of site-specific code, and the
 source library can be versioned and published independently.
 
+## Credits & lineage
+
+nekuva-exts is a fork of [DokiTeam/doki-exts](https://github.com/DokiTeam), which derives from
+[KotatsuApp/kotatsu-parsers](https://github.com/KotatsuApp/kotatsu-parsers). Huge thanks to the
+Doki and Kotatsu teams and all upstream contributors. It is now maintained independently by
+[NekoSukuriputo](https://github.com/NekoSukuriputo).
+
+- **Extension issues:** <https://github.com/NekoSukuriputo/nekuva-exts/issues>
+
+
 ## Using it (as a dependency)
 
 nekuva-exts is published via **JitPack**. Add JitPack to your repositories and depend on a tagged
@@ -77,15 +87,6 @@ Requires **JDK 17**.
 nekuva-exts is currently **JVM-only** (it relies on OkHttp + Jsoup). To support Nekuva on iOS, the
 networking and HTML layers will need a multiplatform path (e.g. Ktor + a multiplatform HTML
 parser). This is planned for a later phase and tracked alongside Nekuva's own migration.
-
-## Credits & lineage
-
-nekuva-exts is a fork of [DokiTeam/doki-exts](https://github.com/DokiTeam), which derives from
-[KotatsuApp/kotatsu-parsers](https://github.com/KotatsuApp/kotatsu-parsers). Huge thanks to the
-Doki and Kotatsu teams and all upstream contributors. It is now maintained independently by
-[NekoSukuriputo](https://github.com/NekoSukuriputo).
-
-- **Extension issues:** <https://github.com/NekoSukuriputo/nekuva-exts/issues>
 
 ## License
 
