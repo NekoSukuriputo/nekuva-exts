@@ -28,7 +28,13 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 	}
 
 	override val availableSortOrders: Set<SortOrder>
-		get() = EnumSet.of(SortOrder.UPDATED)
+		get() = EnumSet.of(
+			SortOrder.UPDATED,
+			SortOrder.NEWEST,
+			SortOrder.NEWEST_ASC,
+			SortOrder.RATING,
+			SortOrder.ALPHABETICAL
+		)
 
 	override val filterCapabilities: MangaListFilterCapabilities
 		get() = MangaListFilterCapabilities(
@@ -43,6 +49,7 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 		availableStates = EnumSet.of(
 			MangaState.ONGOING,
 			MangaState.FINISHED,
+			MangaState.PAUSED,
 		),
 		availableContentTypes = EnumSet.of(
 			ContentType.MANGA,
@@ -160,6 +167,7 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 				val statusStr = when (filter.states.first()) {
 					MangaState.ONGOING -> "ongoing"
 					MangaState.FINISHED -> "completed"
+					MangaState.PAUSED -> "hiatus"
 					else -> ""
 				}
 				if (statusStr.isNotEmpty()) addQueryParameter("status", statusStr)
@@ -168,7 +176,10 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 			// Sort order
 			val sortStr = when (order) {
 				SortOrder.UPDATED -> "latest_chapter"
-				SortOrder.POPULARITY -> "popular"
+				SortOrder.NEWEST -> "newest"
+				SortOrder.NEWEST_ASC -> "oldest"
+				SortOrder.RATING -> "rating"
+				SortOrder.ALPHABETICAL -> "title_asc"
 				else -> "newest"
 			}
 			addQueryParameter("sort", sortStr)
