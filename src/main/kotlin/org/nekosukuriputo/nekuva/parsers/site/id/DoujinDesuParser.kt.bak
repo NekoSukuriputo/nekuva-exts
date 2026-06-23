@@ -1,0 +1,222 @@
+package org.nekosukuriputo.nekuva.parsers.site.id
+
+import okhttp3.Headers
+import org.nekosukuriputo.nekuva.parsers.MangaLoaderContext
+import org.nekosukuriputo.nekuva.parsers.MangaSourceParser
+import org.nekosukuriputo.nekuva.parsers.config.ConfigKey
+import org.nekosukuriputo.nekuva.parsers.core.PagedMangaParser
+import org.nekosukuriputo.nekuva.parsers.model.*
+import org.nekosukuriputo.nekuva.parsers.network.CommonHeaders
+import org.nekosukuriputo.nekuva.parsers.util.*
+import java.text.SimpleDateFormat
+import java.util.*
+
+@MangaSourceParser("DOUJINDESU", "DoujinDesu.tv", "id", ContentType.HENTAI)
+internal class DoujinDesuParser(context: MangaLoaderContext) :
+	PagedMangaParser(context, MangaParserSource.DOUJINDESU, pageSize = 18) {
+
+	override val configKeyDomain: ConfigKey.Domain
+		get() = ConfigKey.Domain("doujindesu.tv")
+
+	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
+		super.onCreateConfig(keys)
+		keys.add(userAgentKey)
+	}
+
+	override val availableSortOrders: Set<SortOrder>
+		get() = EnumSet.of(SortOrder.UPDATED)
+
+	override val filterCapabilities: MangaListFilterCapabilities
+		get() = MangaListFilterCapabilities(
+			isMultipleTagsSupported = false,
+			isSearchSupported = true,
+			isSearchWithFiltersSupported = false,
+			isAuthorSearchSupported = true,
+		)
+
+	override suspend fun getFilterOptions() = MangaListFilterOptions(
+		availableTags = fetchAvailableTags(),
+		availableStates = EnumSet.of(
+			MangaState.ONGOING,
+			MangaState.FINISHED,
+		),
+		availableContentTypes = EnumSet.of(
+			ContentType.MANGA,
+			ContentType.MANHWA,
+			ContentType.DOUJINSHI,
+		),
+	)
+
+	override fun getRequestHeaders(): Headers = Headers.Builder()
+		.add(CommonHeaders.X_REQUESTED_WITH, "XMLHttpRequest")
+		.add(CommonHeaders.REFERER, "https://$domain/")
+		.build()
+
+	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val url = urlBuilder().apply {
+			if (!filter.query.isNullOrBlank()) {
+				if (page > 1) {
+					addPathSegment("page")
+					addPathSegment(page.toString())
+				}
+				addQueryParameter("s", filter.query)
+			} else if (filter.tags.isNotEmpty()) {
+				addPathSegment("genre")
+				filter.tags.oneOrThrowIfMany()?.key?.let { tag ->
+					addPathSegment(tag.lowercase().splitByWhitespace().joinToString("-") { it })
+				}
+				if (page > 1) {
+					addPathSegment("page")
+					addPathSegment(page.toString())
+				}
+			} else if (!filter.author.isNullOrEmpty()) {
+				addPathSegment("author")
+				addPathSegment(filter.author.splitByWhitespace().joinToString("-") { it.lowercase() })
+				if (page > 1) {
+					addPathSegment("page")
+					addPathSegment(page.toString())
+				}
+			} else {
+				addPathSegment("manga")
+				if (page > 1) {
+					addPathSegment("page")
+					addPathSegment(page.toString())
+				}
+
+				if (!filter.states.isEmpty()) {
+					filter.states.oneOrThrowIfMany()?.let {
+						addQueryParameter(
+							"status",
+							when (it) {
+								MangaState.ONGOING -> "Publishing"
+								MangaState.FINISHED -> "Finished"
+								else -> ""
+							},
+						)
+					}
+				}
+
+				when (filter.types.oneOrThrowIfMany()) {
+					ContentType.MANHWA -> addQueryParameter("type", "Manhwa")
+					ContentType.DOUJINSHI -> addQueryParameter("type", "Doujinshi")
+					else -> addQueryParameter("type", "Manga")
+				}
+			}
+		}.build()
+
+		val response = webClient.httpGet(url).parseHtml()
+		return response.select("div.entries article.entry")
+			.mapNotNull {
+				val a = it.selectFirst("a") ?: return@mapNotNull null
+				val href = a.attr("href")
+				Manga(
+					id = generateUid(href),
+					title = a.attr("title").ifEmpty { a.selectFirst(".title span")?.text().orEmpty() },
+					altTitles = emptySet(),
+					url = href,
+					publicUrl = href.toAbsoluteUrl(domain),
+					rating = RATING_UNKNOWN,
+					contentRating = ContentRating.ADULT,
+					coverUrl = a.selectFirst(".thumbnail img")?.src(),
+					tags = emptySet(),
+					state = null,
+					authors = emptySet(),
+					largeCoverUrl = null,
+					description = null,
+					source = source,
+				)
+			}
+	}
+
+	override suspend fun getDetails(manga: Manga): Manga {
+		val docs = webClient.httpGet(manga.url.toAbsoluteUrl(domain)).parseHtml().selectFirstOrThrow("#archive")
+		val chapterDateFormat = SimpleDateFormat("EEEE, dd MMMM yyyy", sourceLocale)
+		val metadataEl = docs.selectFirst(".wrapper > .metadata tbody")
+		val state = when (metadataEl?.selectFirst("tr:contains(Status)")?.selectLast("td")?.text()) {
+			"Finished" -> MangaState.FINISHED
+			"Publishing" -> MangaState.ONGOING
+			else -> null
+		}
+		val author = metadataEl?.selectFirst("tr:contains(Author)")?.selectLast("td")?.text()
+		return manga.copy(
+			authors = setOfNotNull(author),
+			description = docs.selectFirst(".wrapper > .metadata > .pb-2")?.selectFirst("p")?.html(),
+			state = state,
+			rating = metadataEl?.selectFirst(".rating-prc")?.ownText()?.toFloatOrNull()?.div(10f) ?: RATING_UNKNOWN,
+			tags = docs.select(".tags > a").mapToSet {
+				MangaTag(
+					key = it.attr("title"),
+					title = it.text(),
+					source = source,
+				)
+			},
+			chapters = docs.requireElementById("chapter_list")
+				.select("ul > li")
+				.mapChapters(reversed = true) { index, element ->
+					val titleTag = element.selectFirstOrThrow(".epsleft > .lchx > a")
+					val url = titleTag.attrAsRelativeUrl("href")
+					MangaChapter(
+						id = generateUid(url),
+						title = titleTag.text(),
+						number = index + 1f,
+						volume = 0,
+						url = url,
+						scanlator = null,
+						uploadDate = chapterDateFormat.parseSafe(element.select(".epsleft > .date").text()),
+						branch = null,
+						source = source,
+					)
+				},
+		)
+	}
+
+	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
+		val chapterUrl = chapter.url.removeSuffix("/")
+		val id = webClient.httpGet(chapterUrl.toAbsoluteUrl(domain)).parseHtml()
+			.requireElementById("reader")
+			.attr("data-id")
+
+		for (attempt in 1..3) {
+			val document = webClient.httpPost("/themes/ajax/ch.php".toAbsoluteUrl(domain), "id=$id").parseHtml()
+
+			// Jika response tidak mengandung <title>, berarti ini adalah fragment HTML gambar yang valid
+			if (document.selectFirst("title") == null) {
+				val images = document.select("img").filterNot { it.parent()?.tagName() == "a" }
+
+				if (images.isNotEmpty()) {
+					return images.map {
+						val url = it.attrAsRelativeUrl("src")
+						MangaPage(
+							id = generateUid(url),
+							url = url,
+							preview = null,
+							source = source,
+						)
+					}
+				}
+			}
+
+			if (attempt == 3) {
+				throw Exception("Gagal memuat gambar (ter-redirect oleh server) setelah 3 kali percobaan. Silahkan refresh ulang.")
+			}
+
+			kotlinx.coroutines.delay(1000)
+		}
+
+		throw Exception("Gagal memuat gambar chapter.")
+	}
+
+	private suspend fun fetchAvailableTags(): Set<MangaTag> {
+		return webClient.httpGet("/genre/".toAbsoluteUrl(domain)).parseHtml()
+			.requireElementById("taxonomy")
+			.selectFirstOrThrow(".entries")
+			.select(".entry > a")
+			.mapToSet {
+				MangaTag(
+					key = it.attr("title"),
+					title = it.attr("title"),
+					source = source,
+				)
+			}
+	}
+}
