@@ -3,7 +3,7 @@
 Tracks the **runtime-loadable extension (plugin)** migration on the `nekuva-exts` side: letting the host
 app (Nekuva) update the manga-source catalog by downloading a new bundle, instead of rebuilding the app
 for every new source. The host-side design + rationale live in the Nekuva UI repo's `MIGRATION.md`
-(Section G). Reference implementation: **Usagi** (`github.com/UsagiApp/Usagi`, Kotatsu-based, Android-only).
+(Section G).
 
 ## Host ⇄ extension contract (the ABI)
 
