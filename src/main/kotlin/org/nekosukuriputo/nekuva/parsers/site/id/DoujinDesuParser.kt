@@ -263,6 +263,23 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 			}
 		}?.toSet() ?: emptySet()
 
+		val authors = mutableSetOf<String>()
+		val termListStr = item.optString("term_list", "")
+		if (termListStr.isNotBlank()) {
+			val terms = termListStr.split("|")
+			for (term in terms) {
+				val parts = term.split(":")
+				if (parts.size == 3 && parts[1] == "author") {
+					authors.add(parts[0])
+				}
+			}
+		}
+
+		val altTitlesStr = item.optString("alt_titles", "")
+		val altTitles = if (altTitlesStr.isNotBlank()) {
+			altTitlesStr.split("|").map { it.trim() }.toSet()
+		} else emptySet()
+
 		return manga.copy(
 			description = item.optString("description"),
 			state = when (item.optString("status")) {
@@ -272,6 +289,8 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 			},
 			rating = (item.optDouble("rating", 0.0) / 10.0).toFloat(),
 			tags = tags,
+			authors = authors,
+			altTitles = altTitles,
 			chapters = chapters
 		)
 	}
