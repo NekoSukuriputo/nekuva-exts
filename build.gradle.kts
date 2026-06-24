@@ -108,3 +108,14 @@ val assemblePluginArtifacts by tasks.registering {
         logger.lifecycle("Extension plugin artifacts written to ${out.absolutePath}")
     }
 }
+
+// Stages the runtime dependencies (okhttp/jsoup/kotlin-stdlib/…) into build/plugin/deps so CI can pass
+// them to `d8 --classpath` when dexing the Android bundle. They're only for reference resolution — the
+// host provides them at runtime, so they are NOT included in the produced classes.dex.
+val stagePluginDeps by tasks.registering(Copy::class) {
+    description = "Copy runtime dependency jars for the Android d8 classpath."
+    group = "distribution"
+    from(configurations.named("runtimeClasspath"))
+    into(layout.buildDirectory.dir("plugin/deps"))
+    include("*.jar")
+}

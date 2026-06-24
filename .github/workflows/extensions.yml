@@ -5,7 +5,7 @@ name: Build extension artifacts
 # an app rebuild. JitPack still builds the compile-time dependency from the same tag independently —
 # this only adds the runtime artifacts.
 #
-# Step 2 (current): Desktop jar only. Step 3 will add the Android (dexed) artifact + signing.
+# Produces: Desktop jar (JVM .class), Android jar (dexed via d8), and index.json listing both + sha256.
 
 on:
   push:
@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   extension:
-    name: Extension bundle (Desktop)
+    name: Extension bundle (Desktop + Android)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,11 +26,42 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: gradle
-      - name: Build plugin artifacts
+      - name: Build Desktop jar + stage deps
         run: |
           chmod +x gradlew
           VERSION="${GITHUB_REF_NAME#v}"
-          ./gradlew assemblePluginArtifacts -PpluginVersion="$VERSION"
+          ./gradlew assemblePluginArtifacts stagePluginDeps -PpluginVersion="$VERSION"
+      - name: Dex bundle for Android (d8)
+        run: |
+          SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          ANDROID_JAR="$(ls -d "$SDK"/platforms/android-* | sort -V | tail -1)/android.jar"
+          D8="$(ls "$SDK"/build-tools/*/d8 | sort -V | tail -1)"
+          echo "d8=$D8"
+          echo "android.jar=$ANDROID_JAR"
+          # deps are classpath-only (resolution) — they are NOT included in the dex; the host provides them.
+          CP_ARGS=()
+          for j in build/plugin/deps/*.jar; do CP_ARGS+=(--classpath "$j"); done
+          # --min-api must match the app's minSdk (24).
+          "$D8" --release --min-api 24 --lib "$ANDROID_JAR" "${CP_ARGS[@]}" \
+            --output build/plugin/nekuva-ext-android.jar \
+            build/plugin/nekuva-ext-desktop.jar
+      - name: Write catalog (index.json)
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          DSHA="$(sha256sum build/plugin/nekuva-ext-desktop.jar | cut -d' ' -f1)"
+          ASHA="$(sha256sum build/plugin/nekuva-ext-android.jar | cut -d' ' -f1)"
+          # abiVersion must match nekuva-exts NekuvaExtensions.ABI_VERSION + the build's extAbiVersion.
+          cat > build/plugin/index.json <<JSON
+          {
+            "abiVersion": 1,
+            "version": "$VERSION",
+            "artifacts": {
+              "desktop": { "file": "nekuva-ext-desktop.jar", "sha256": "$DSHA" },
+              "android": { "file": "nekuva-ext-android.jar", "sha256": "$ASHA" }
+            }
+          }
+          JSON
+          cat build/plugin/index.json
       - name: Attach to release
         uses: softprops/action-gh-release@v2
         with:
@@ -38,4 +69,5 @@ jobs:
           fail_on_unmatched_files: true
           files: |
             build/plugin/nekuva-ext-desktop.jar
+            build/plugin/nekuva-ext-android.jar
             build/plugin/index.json
