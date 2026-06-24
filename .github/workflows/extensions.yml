@@ -62,6 +62,22 @@ jobs:
           }
           JSON
           cat build/plugin/index.json
+      - name: Sign catalog (index.json.sig)
+        env:
+          # RSA private key (PEM) — generate once, add as a repo secret. The app embeds the matching
+          # public key and rejects bundles whose index.json signature doesn't verify. Absent → empty sig
+          # (the app accepts it only while its public key is still unset).
+          EXT_SIGNING_KEY: ${{ secrets.EXT_SIGNING_KEY }}
+        run: |
+          if [ -n "$EXT_SIGNING_KEY" ]; then
+            printf '%s' "$EXT_SIGNING_KEY" > /tmp/ext_key.pem
+            openssl dgst -sha256 -sign /tmp/ext_key.pem build/plugin/index.json | base64 -w0 > build/plugin/index.json.sig
+            rm -f /tmp/ext_key.pem
+            echo "index.json signed."
+          else
+            : > build/plugin/index.json.sig
+            echo "No EXT_SIGNING_KEY secret — wrote empty signature."
+          fi
       - name: Attach to release
         uses: softprops/action-gh-release@v2
         with:
@@ -71,3 +87,4 @@ jobs:
             build/plugin/nekuva-ext-desktop.jar
             build/plugin/nekuva-ext-android.jar
             build/plugin/index.json
+            build/plugin/index.json.sig
