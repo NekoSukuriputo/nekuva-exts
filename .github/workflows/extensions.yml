@@ -16,8 +16,69 @@ permissions:
   contents: write
 
 jobs:
+  # Create the Release first with curated notes + a commit changelog, so the build job only ATTACHES files
+  # and never overwrites the body (mirrors the nekuva app's release workflow).
+  create-release:
+    name: Create release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history + tags so we can diff against the previous tag
+      # Build the release body: a curated intro + a COMMIT list (subject + short SHA + @author) for every
+      # commit since the previous tag, a Contributors list, and the compare link. GitHub's
+      # generate_release_notes is PR-based; this repo commits straight to main, so we list commits via the
+      # compare API (which also resolves each commit's GitHub @login) instead.
+      - name: Build release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          NEW="${GITHUB_REF_NAME}"
+          PREV="$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)"
+          cat > release_notes.md <<'INTRO'
+          Runtime **extension bundle** (manga sources) for the Nekuva reader.
+
+          These are the parsers from `nekuva-exts`, packaged so Nekuva can update its sources **without a full
+          app rebuild** — open Nekuva → **Settings → About → Update extensions** to download the latest bundle.
+
+          ## Assets
+          - `nekuva-ext-desktop.jar` — Desktop (JVM) bundle.
+          - `nekuva-ext-android.jar` — Android bundle (dexed with d8, `--min-api 24`).
+          - `index.json` — catalog the app reads (version + per-platform sha256). `index.json.sig` — its RSA signature.
+
+          > Imported/updated bundles are verified against Nekuva's embedded public key before loading.
+          INTRO
+          {
+            echo
+            if [ -n "$PREV" ]; then
+              gh api "repos/${GITHUB_REPOSITORY}/compare/${PREV}...${NEW}" > compare.json
+              echo "## What's Changed"
+              jq -r '.commits[] | "* " + (.commit.message | split("\n")[0]) + " [`" + .sha[0:7] + "`](" + .html_url + ") " + (if .author then "@" + .author.login else .commit.author.name end)' compare.json
+              echo
+              echo "## Contributors"
+              jq -r '[.commits[] | if .author then "@" + .author.login else .commit.author.name end] | unique | .[] | "* " + .' compare.json
+              echo
+              echo "**Full Changelog**: https://github.com/${GITHUB_REPOSITORY}/compare/${PREV}...${NEW}"
+            else
+              echo "## What's Changed"
+              git log --pretty="format:* %s [\`%h\`](https://github.com/${GITHUB_REPOSITORY}/commit/%H) %an"
+              echo
+            fi
+          } >> release_notes.md
+          echo "----- generated release notes -----"
+          cat release_notes.md
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: nekuva-exts ${{ github.ref_name }}
+          prerelease: false
+          make_latest: true
+          body_path: release_notes.md
+
   extension:
     name: Extension bundle (Desktop + Android)
+    needs: create-release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
