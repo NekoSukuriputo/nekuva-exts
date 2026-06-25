@@ -258,7 +258,7 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 					branch = null,
 					source = source
 				)
-			}
+			}.reversed()
 		} ?: emptyList()
 
 		val tags = item.optJSONArray("manga_genres")?.let { genresArray ->
