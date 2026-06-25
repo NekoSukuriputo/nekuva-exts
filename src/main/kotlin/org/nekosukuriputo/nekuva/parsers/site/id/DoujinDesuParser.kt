@@ -220,7 +220,7 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getDetails(manga: Manga): Manga {
-		val slug = manga.url.removePrefix("/")
+		val slug = manga.url.trim('/').substringAfterLast("/")
 		val url = urlBuilder().apply {
 			addPathSegment("api")
 			addPathSegment("manga")
