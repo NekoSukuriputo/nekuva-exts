@@ -292,8 +292,16 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 			altTitlesStr.split("|").map { it.trim() }.toSet()
 		} else emptySet()
 
+		var rawDesc = item.optString("description", "")
+		rawDesc = org.jsoup.parser.Parser.unescapeEntities(rawDesc, false)
+		rawDesc = org.jsoup.parser.Parser.unescapeEntities(rawDesc, false) // twice for double escaped
+		val cleanDesc = org.jsoup.Jsoup.parseBodyFragment(rawDesc).apply {
+			select("br").append("\\n")
+			select("p").prepend("\\n\\n")
+		}.text().replace("\\n", "\n").trim()
+
 		return manga.copy(
-			description = item.optString("description"),
+			description = cleanDesc,
 			state = when (item.optString("status")) {
 				"ongoing" -> MangaState.ONGOING
 				"completed" -> MangaState.FINISHED
