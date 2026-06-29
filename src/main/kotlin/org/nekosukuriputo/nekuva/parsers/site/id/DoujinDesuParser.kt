@@ -135,16 +135,26 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
 		val url = urlBuilder().apply {
 			addPathSegment("api")
-			addPathSegment("manga")
+			
+			if (!filter.author.isNullOrBlank()) {
+				addPathSegment("taxonomy")
+				addPathSegment("authors")
+				val authorSlug = filter.author.lowercase().replace(" ", "-")
+				addPathSegment(authorSlug)
+				addQueryParameter("page", page.toString())
+				addQueryParameter("limit", pageSize.toString())
+				addQueryParameter("sort", "latest")
+			} else {
+				addPathSegment("manga")
 
-			// Pagination logic based on offset
-			val offset = (page - 1) * pageSize
-			addQueryParameter("offset", offset.toString())
-			addQueryParameter("limit", pageSize.toString())
+				// Pagination logic based on offset
+				val offset = (page - 1) * pageSize
+				addQueryParameter("offset", offset.toString())
+				addQueryParameter("limit", pageSize.toString())
 
-			if (!filter.query.isNullOrBlank()) {
-				addQueryParameter("search", filter.query)
-			}
+				if (!filter.query.isNullOrBlank()) {
+					addQueryParameter("search", filter.query)
+				}
 
 			// Content Type filter
 			if (filter.types.isNotEmpty()) {
@@ -173,22 +183,27 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 				if (statusStr.isNotEmpty()) addQueryParameter("status", statusStr)
 			}
 
-			// Sort order
-			val sortStr = when (order) {
-				SortOrder.UPDATED -> "latest_chapter"
-				SortOrder.NEWEST -> "newest"
-				SortOrder.NEWEST_ASC -> "oldest"
-				SortOrder.RATING -> "rating"
-				SortOrder.ALPHABETICAL -> "title_asc"
-				else -> "newest"
+				// Sort order
+				val sortStr = when (order) {
+					SortOrder.UPDATED -> "latest_chapter"
+					SortOrder.NEWEST -> "latest"
+					SortOrder.NEWEST_ASC -> "oldest"
+					SortOrder.RATING -> "rating"
+					SortOrder.ALPHABETICAL -> "title_asc"
+					else -> "latest_chapter"
+				}
+				addQueryParameter("sort", sortStr)
 			}
-			addQueryParameter("sort", sortStr)
 		}.build()
 
 		val jsonResponse = webClient.httpGet(url).parseJson()
 		val encryptedPayload = jsonResponse.getString("_enc_resp_")
 		val decryptedStr = decryptPayload(encryptedPayload)
-		val jsonArray = JSONArray(decryptedStr)
+		val jsonArray = if (decryptedStr.startsWith("{")) {
+			JSONObject(decryptedStr).getJSONArray("mangaList")
+		} else {
+			JSONArray(decryptedStr)
+		}
 
 		return (0 until jsonArray.length()).map { i ->
 			val item = jsonArray.getJSONObject(i)
@@ -200,8 +215,8 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 				id = generateUid(slug),
 				title = title,
 				altTitles = emptySet(),
-				url = "/$slug",
-				publicUrl = "https://$domain/manga/$slug",
+				url = "/manga/$slug/",
+				publicUrl = "https://$domain/manga/$slug/",
 				rating = (item.optDouble("rating", 0.0) / 10.0).toFloat(),
 				contentRating = ContentRating.ADULT,
 				coverUrl = coverUrl.ifBlank { null },
@@ -282,7 +297,8 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 			for (term in terms) {
 				val parts = term.split(":")
 				if (parts.size == 3 && parts[1] == "author") {
-					authors.add(parts[0])
+					val authorNames = parts[0].split(",").map { it.trim() }.filter { it.isNotBlank() }
+					authors.addAll(authorNames)
 				}
 			}
 		}
