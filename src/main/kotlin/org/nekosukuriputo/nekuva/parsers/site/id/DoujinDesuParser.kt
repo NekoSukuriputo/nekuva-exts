@@ -211,9 +211,9 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 			var coverUrl = item.optString("cover_url", "")
 			if (coverUrl.isNotBlank() && !coverUrl.startsWith("http")) {
 				coverUrl = if (coverUrl.startsWith("/")) {
-					"https://cdn-static.desu.xxx$coverUrl"
+					"https://$domain$coverUrl"
 				} else {
-					"https://cdn-static.desu.xxx/$coverUrl"
+					"https://$domain/$coverUrl"
 				}
 			}
 			val title = item.getString("title")
@@ -326,9 +326,9 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 		var detailCoverUrl = item.optString("cover_url", "")
 		if (detailCoverUrl.isNotBlank() && !detailCoverUrl.startsWith("http")) {
 			detailCoverUrl = if (detailCoverUrl.startsWith("/")) {
-				"https://cdn-static.desu.xxx$detailCoverUrl"
+				"https://$domain$detailCoverUrl"
 			} else {
-				"https://cdn-static.desu.xxx/$detailCoverUrl"
+				"https://$domain/$detailCoverUrl"
 			}
 		}
 
