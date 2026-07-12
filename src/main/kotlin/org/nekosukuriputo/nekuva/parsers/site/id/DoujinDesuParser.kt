@@ -208,7 +208,14 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 		return (0 until jsonArray.length()).map { i ->
 			val item = jsonArray.getJSONObject(i)
 			val slug = item.getString("slug")
-			val coverUrl = item.optString("cover_url", "")
+			var coverUrl = item.optString("cover_url", "")
+			if (coverUrl.isNotBlank() && !coverUrl.startsWith("http")) {
+				coverUrl = if (coverUrl.startsWith("/")) {
+					"https://cdn-static.desu.xxx$coverUrl"
+				} else {
+					"https://cdn-static.desu.xxx/$coverUrl"
+				}
+			}
 			val title = item.getString("title")
 
 			Manga(
@@ -316,8 +323,18 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 			select("p").prepend("\\n\\n")
 		}.text().replace("\\n", "\n").trim()
 
+		var detailCoverUrl = item.optString("cover_url", "")
+		if (detailCoverUrl.isNotBlank() && !detailCoverUrl.startsWith("http")) {
+			detailCoverUrl = if (detailCoverUrl.startsWith("/")) {
+				"https://cdn-static.desu.xxx$detailCoverUrl"
+			} else {
+				"https://cdn-static.desu.xxx/$detailCoverUrl"
+			}
+		}
+
 		return manga.copy(
 			description = cleanDesc,
+			coverUrl = detailCoverUrl.ifBlank { manga.coverUrl },
 			state = when (item.optString("status")) {
 				"ongoing" -> MangaState.ONGOING
 				"completed" -> MangaState.FINISHED
