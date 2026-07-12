@@ -135,6 +135,15 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
 		val url = urlBuilder().apply {
 			addPathSegment("api")
+
+			val sortStr = when (order) {
+				SortOrder.UPDATED -> "latest_chapter"
+				SortOrder.NEWEST -> "latest"
+				SortOrder.NEWEST_ASC -> "oldest"
+				SortOrder.RATING -> "rating"
+				SortOrder.ALPHABETICAL -> "title_asc"
+				else -> "latest_chapter"
+			}
 			
 			if (!filter.author.isNullOrBlank()) {
 				addPathSegment("taxonomy")
@@ -144,6 +153,14 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 				addQueryParameter("page", page.toString())
 				addQueryParameter("limit", pageSize.toString())
 				addQueryParameter("sort", "latest")
+			} else if (filter.tags.size == 1 && filter.query.isNullOrBlank() && filter.types.isEmpty() && filter.states.isEmpty()) {
+				addPathSegment("taxonomy")
+				addPathSegment("genres")
+				val genreSlug = filter.tags.first().key
+				addPathSegment(genreSlug)
+				addQueryParameter("page", page.toString())
+				addQueryParameter("limit", pageSize.toString())
+				addQueryParameter("sort", sortStr)
 			} else {
 				addPathSegment("manga")
 
@@ -156,42 +173,34 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 					addQueryParameter("search", filter.query)
 				}
 
-			// Content Type filter
-			if (filter.types.isNotEmpty()) {
-				val typeStr = when (filter.types.first()) {
-					ContentType.MANGA -> "manga"
-					ContentType.MANHWA -> "manhwa"
-					ContentType.DOUJINSHI -> "doujinshi"
-					else -> ""
+				// Content Type filter
+				if (filter.types.isNotEmpty()) {
+					val typeStr = when (filter.types.first()) {
+						ContentType.MANGA -> "manga"
+						ContentType.MANHWA -> "manhwa"
+						ContentType.DOUJINSHI -> "doujinshi"
+						else -> ""
+					}
+					if (typeStr.isNotEmpty()) addQueryParameter("type", typeStr)
 				}
-				if (typeStr.isNotEmpty()) addQueryParameter("type", typeStr)
-			}
 
-			// Genres filter
-			if (filter.tags.isNotEmpty()) {
-				addQueryParameter("genre", filter.tags.joinToString(",") { it.key })
-			}
-
-			// Status filter
-			if (filter.states.isNotEmpty()) {
-				val statusStr = when (filter.states.first()) {
-					MangaState.ONGOING -> "ongoing"
-					MangaState.FINISHED -> "completed"
-					MangaState.PAUSED -> "hiatus"
-					else -> ""
+				// Genres filter
+				if (filter.tags.isNotEmpty()) {
+					addQueryParameter("genre", filter.tags.joinToString(",") { it.key })
 				}
-				if (statusStr.isNotEmpty()) addQueryParameter("status", statusStr)
-			}
+
+				// Status filter
+				if (filter.states.isNotEmpty()) {
+					val statusStr = when (filter.states.first()) {
+						MangaState.ONGOING -> "ongoing"
+						MangaState.FINISHED -> "completed"
+						MangaState.PAUSED -> "hiatus"
+						else -> ""
+					}
+					if (statusStr.isNotEmpty()) addQueryParameter("status", statusStr)
+				}
 
 				// Sort order
-				val sortStr = when (order) {
-					SortOrder.UPDATED -> "latest_chapter"
-					SortOrder.NEWEST -> "latest"
-					SortOrder.NEWEST_ASC -> "oldest"
-					SortOrder.RATING -> "rating"
-					SortOrder.ALPHABETICAL -> "title_asc"
-					else -> "latest_chapter"
-				}
 				addQueryParameter("sort", sortStr)
 			}
 		}.build()
