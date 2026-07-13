@@ -38,10 +38,10 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 
 	override val filterCapabilities: MangaListFilterCapabilities
 		get() = MangaListFilterCapabilities(
-			isMultipleTagsSupported = false,
+			isMultipleTagsSupported = true,
 			isSearchSupported = true,
-			isSearchWithFiltersSupported = false,
-			isAuthorSearchSupported = false,
+			isSearchWithFiltersSupported = true,
+			isAuthorSearchSupported = true,
 		)
 
 	override suspend fun getFilterOptions() = MangaListFilterOptions(
@@ -144,7 +144,7 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 				SortOrder.ALPHABETICAL -> "title_asc"
 				else -> "latest_chapter"
 			}
-			
+
 			if (!filter.author.isNullOrBlank()) {
 				addPathSegment("taxonomy")
 				addPathSegment("authors")
@@ -153,14 +153,6 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 				addQueryParameter("page", page.toString())
 				addQueryParameter("limit", pageSize.toString())
 				addQueryParameter("sort", "latest")
-			} else if (filter.tags.size == 1 && filter.query.isNullOrBlank() && filter.types.isEmpty() && filter.states.isEmpty()) {
-				addPathSegment("taxonomy")
-				addPathSegment("genres")
-				val genreSlug = filter.tags.first().key
-				addPathSegment(genreSlug)
-				addQueryParameter("page", page.toString())
-				addQueryParameter("limit", pageSize.toString())
-				addQueryParameter("sort", sortStr)
 			} else {
 				addPathSegment("manga")
 
@@ -388,21 +380,19 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 	private suspend fun fetchAvailableTags(): Set<MangaTag> {
 		val url = urlBuilder().apply {
 			addPathSegment("api")
-			addPathSegment("taxonomy")
 			addPathSegment("genres")
-			addQueryParameter("page", "1")
-			addQueryParameter("limit", "500")
 		}.build()
 
 		val jsonResponse = webClient.httpGet(url).parseJson()
 		val encryptedPayload = jsonResponse.getString("_enc_resp_")
 		val decryptedStr = decryptPayload(encryptedPayload)
-		val terms = JSONObject(decryptedStr).optJSONArray("terms") ?: return emptySet()
+		val terms = JSONArray(decryptedStr)
 
 		return (0 until terms.length()).mapNotNull { i ->
 			val genre = terms.optJSONObject(i) ?: return@mapNotNull null
 			val name = genre.optString("name")
 			val slug = genre.optString("slug", name)
+			if (name.isBlank() || slug.isBlank() || name == "[]") return@mapNotNull null
 			MangaTag(
 				key = slug,
 				title = name,
