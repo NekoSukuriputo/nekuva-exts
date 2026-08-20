@@ -13,6 +13,7 @@ import org.nekosukuriputo.nekuva.parsers.model.MangaParserSource
 import org.nekosukuriputo.nekuva.parsers.model.MangaTag
 import org.nekosukuriputo.nekuva.parsers.model.RATING_UNKNOWN
 import org.nekosukuriputo.nekuva.parsers.model.SortOrder
+import org.nekosukuriputo.nekuva.parsers.model.MangaListFilterOptions
 import org.nekosukuriputo.nekuva.parsers.site.galleryadults.GalleryAdultsParser
 import org.nekosukuriputo.nekuva.parsers.util.generateUid
 import org.nekosukuriputo.nekuva.parsers.util.json.mapJSON
@@ -20,6 +21,11 @@ import org.nekosukuriputo.nekuva.parsers.util.json.mapJSONNotNull
 import org.nekosukuriputo.nekuva.parsers.util.parseJson
 import org.nekosukuriputo.nekuva.parsers.util.urlBuilder
 import org.nekosukuriputo.nekuva.parsers.util.urlEncoded
+import org.nekosukuriputo.nekuva.parsers.util.toTitleCase
+import org.nekosukuriputo.nekuva.parsers.util.flattenTo
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import java.util.EnumSet
 import java.util.Locale
 
@@ -42,6 +48,36 @@ internal class NHentaiParser(context: MangaLoaderContext) :
 		SortOrder.POPULARITY_TODAY,
 		SortOrder.POPULARITY_WEEK
 	)
+
+	override suspend fun getFilterOptions(): MangaListFilterOptions {
+		return MangaListFilterOptions(
+			availableTags = fetchAvailableTags(),
+			availableLocales = setOf(
+				Locale.ENGLISH,
+				Locale.JAPANESE,
+				Locale.CHINESE,
+			),
+		)
+	}
+
+	private suspend fun fetchAvailableTags(): Set<MangaTag> {
+		return coroutineScope {
+			(1..3).map { page ->
+				async {
+					val url = "https://$domain/$apiSuffix/tags/tag?sort=popular&page=$page"
+					runCatching {
+						webClient.httpGet(url).parseJson().optJSONArray("result")?.mapJSON {
+							MangaTag(
+								key = it.getString("slug"),
+								title = it.getString("name").toTitleCase(),
+								source = source,
+							)
+						}?.toSet() ?: emptySet()
+					}.getOrDefault(emptySet())
+				}
+			}
+		}.awaitAll().flattenTo(androidx.collection.ArraySet(360))
+	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
 		val url = urlBuilder().addPathSegments(apiSuffix)
@@ -75,7 +111,7 @@ internal class NHentaiParser(context: MangaLoaderContext) :
 			}
 
 			url.addPathSegment("search")
-			url.addQueryParameter("query", query.urlEncoded())
+			url.addQueryParameter("query", query)
 			url.addQueryParameter("sort", sort)
 			url.addQueryParameter("page", page.toString())
 		}
@@ -144,6 +180,29 @@ internal class NHentaiParser(context: MangaLoaderContext) :
 				source = source,
 			)
 		}
+	}
+
+	override suspend fun getRelatedManga(seed: Manga): List<Manga> {
+		val id = seed.url.removeSurrounding("/g/", "/")
+		val obj = webClient.httpGet("https://$domain/$apiSuffix/galleries/$id?include=related").parseJson()
+		return obj.optJSONArray("related")?.mapJSON {
+			val rId = it.getInt("id")
+			val title = it.extractTitle()
+			Manga(
+				id = generateUid("/g/$rId/"),
+				title = title.cleanupTitle().ifEmpty { title },
+				altTitles = emptySet(),
+				url = "/g/$rId/",
+				publicUrl = "https://$domain/g/$rId/",
+				rating = RATING_UNKNOWN,
+				contentRating = ContentRating.ADULT,
+				coverUrl = "https://t.$domain/${it.getThumbnailPath()}",
+				tags = emptySet(),
+				state = null,
+				authors = emptySet(),
+				source = source
+			)
+		} ?: emptyList()
 	}
 
 	override suspend fun getPageUrl(page: MangaPage): String = page.url
