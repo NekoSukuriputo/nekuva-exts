@@ -294,7 +294,7 @@ internal abstract class NatsuParser(
             ?.map { it.trim() }
             ?.toSet() ?: emptySet()
 
-        val chapters = loadChapters(mangaId, manga.url.toAbsoluteUrl(domain))
+        val chapters = loadChapters(mangaId, manga.url.toAbsoluteUrl(domain), doc)
 
         return manga.copy(
             title = title,
@@ -311,7 +311,37 @@ internal abstract class NatsuParser(
 	protected open suspend fun loadChapters(
 		mangaId: String,
 		mangaAbsoluteUrl: String,
+		doc: Document? = null,
 	): List<MangaChapter> {
+		val parsedChapters = mutableListOf<MangaChapter>()
+
+		fun extractChapters(elements: org.jsoup.select.Elements) {
+			elements.mapNotNullTo(parsedChapters) { element ->
+				val a = element.selectFirst("a") ?: return@mapNotNullTo null
+				val href = a.attrAsRelativeUrl("href").takeIf { it.isNotBlank() } ?: return@mapNotNullTo null
+
+				MangaChapter(
+					id = generateUid(href),
+					title = element.selectFirst("div.font-medium span")?.text() ?: "",
+					url = href,
+					number = element.attr("data-chapter-number").toFloatOrNull() ?: -1f,
+					volume = 0,
+					scanlator = null,
+					uploadDate = parseDate(element.selectFirst("time")?.text()),
+					branch = null,
+					source = source,
+				)
+			}
+		}
+
+		if (doc != null) {
+			val response = doc.select("div#chapter-list > div[data-chapter-number]")
+			if (response.isNotEmpty()) {
+				extractChapters(response)
+				return parsedChapters.reversed()
+			}
+		}
+
 		val headers = Headers.headersOf(
 			"HX-Request", "true",
 			"HX-Target", "chapter-list",
@@ -320,48 +350,31 @@ internal abstract class NatsuParser(
 			CommonHeaders.REFERER, mangaAbsoluteUrl,
 		)
 
-		return buildList {
-			for (page in 1..50) {
-				val url = urlBuilder()
-					.addPathSegment("wp-admin")
-					.addPathSegment("admin-ajax.php")
-					.addQueryParameter("manga_id", mangaId)
-					.addQueryParameter("page", page.toString())
-					.addQueryParameter("action", "chapter_list")
+		for (page in 1..50) {
+			val url = urlBuilder()
+				.addPathSegment("wp-admin")
+				.addPathSegment("admin-ajax.php")
+				.addQueryParameter("manga_id", mangaId)
+				.addQueryParameter("page", page.toString())
+				.addQueryParameter("action", "chapter_list")
 
-				// Trying to force stop when chapterElements not exist
-				val chapterElements = try {
-					webClient.httpGet(url.build(), headers).parseHtml()
-				} catch (e: HttpStatusException) {
-					if (e.statusCode == 520) {
-						break
-					} else {
-						throw e
-					}
-				}
-
-				val response = chapterElements.select("div#chapter-list > div[data-chapter-number]")
-				if (response.isEmpty()) break
-
-				// Mapping
-				response.mapNotNullTo(this) { element ->
-					val a = element.selectFirst("a") ?: return@mapNotNullTo null
-					val href = a.attrAsRelativeUrl("href").takeIf { it.isNotBlank() } ?: return@mapNotNullTo null
-
-					MangaChapter(
-						id = generateUid(href),
-						title = element.selectFirst("div.font-medium span")?.text() ?: "",
-						url = href,
-						number = element.attr("data-chapter-number").toFloatOrNull() ?: -1f,
-						volume = 0,
-						scanlator = null,
-						uploadDate = parseDate(element.selectFirst("time")?.text()),
-						branch = null,
-						source = source,
-					)
+			val chapterElements = try {
+				webClient.httpGet(url.build(), headers).parseHtml()
+			} catch (e: HttpStatusException) {
+				if (e.statusCode == 520 || e.statusCode == 400) {
+					break
+				} else {
+					throw e
 				}
 			}
-		}.reversed()
+
+			val response = chapterElements.select("div#chapter-list > div[data-chapter-number]")
+			if (response.isEmpty()) break
+
+			extractChapters(response)
+		}
+
+		return parsedChapters.reversed()
 	}
 
     override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
